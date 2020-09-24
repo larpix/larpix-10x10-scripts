@@ -1,0 +1,34 @@
+{
+    "_config_type": "controller",
+    "name": "network-10x10-tile",
+    "asic_version": 2,
+    "layout": "2.2.0",
+    "network": {
+        "1": {
+            "1": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,  11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,  null]}
+                ]
+            }
+        },
+        "miso_us_uart_map": [
+            3,
+            0,
+            1,
+            2
+        ],
+        "miso_ds_uart_map": [
+            1,
+            2,
+            3,
+            0
+        ],
+        "mosi_uart_map": [
+            2,
+            3,
+            0,
+            1
+        ]
+    }
+}
