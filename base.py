@@ -32,6 +32,7 @@ def main(controller_config_file=None, logger=False, reset=True):
     # set larpix power voltages (pacman only)
     print('Setting larpix power...')
     #c.io.set_vddd()[1] # default (VDDD~1.8V)
+    #c.io.set_vddd(vddd_dac=0xeee4)[1] #
     c.io.set_vddd(vddd_dac=0xb620)[1] # default (VDDD~1.2V)        
     #c.io.set_vddd(vddd_dac=0xbbd0)[1] # mid-power (VDDD~1.6V)
     #c.io.set_vddd(vddd_dac=0x95a3)[1] # low-power (VDDD~1.3V)
@@ -40,7 +41,7 @@ def main(controller_config_file=None, logger=False, reset=True):
     #c.io.set_vddd(vddd_dac=0xdee4)[1] 
     
     #c.io.set_vdda()[1]
-    c.io.set_vdda(vdda_dac=0xeee4)[1]    
+    c.io.set_vdda(vdda_dac=0xd8e4)[1]    
     mask = c.io.enable_tile()[1]
     print('tile enabled?:',hex(mask))
     vddd,iddd = c.io.get_vddd()[1]
@@ -91,11 +92,11 @@ def main(controller_config_file=None, logger=False, reset=True):
                 c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[0], io_group=io_group)
 
     # initialize network
-    c.io.group_packets_by_io_group = False # throttle the data rate to insure no FIFO collisions    
+    c.io.group_packets_by_io_group = False # throttle the data rate to insure no FIFO collisions  
     for io_group, io_channels in c.network.items():
         for io_channel in io_channels:
             print('init network {}-{}'.format(io_group,io_channel))
-            c.init_network(io_group, io_channel)
+            c.init_network(io_group, io_channel, modify_mosi=False)
     
     # set uart speed
     clk_ctrl = 1
@@ -127,13 +128,14 @@ def main(controller_config_file=None, logger=False, reset=True):
         c.write_configuration(chip_key, registers)
 
     # verify
-    ok,diff = c.verify_configuration(timeout=1)
+    c.io.double_send_packets = True
+    ok,diff = c.verify_network(timeout=0.01)
     for chip_key in diff:
-        c.write_configuration(chip_key, diff[chip_key].keys())
-    ok,diff = c.verify_configuration(timeout=1)
-    if not ok:
-        for key in diff:
-            print('config error',key,diff[key])
+        ok,diff = c.verify_network(chip_key,timeout=0.01)
+        if not ok:
+            for key in diff:
+                print('config error',key,diff[key])
+    c.io.double_send_packets = False
     c.io.group_packets_by_io_group = True
     return c
 
