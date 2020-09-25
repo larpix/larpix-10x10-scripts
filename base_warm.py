@@ -43,9 +43,10 @@ def main(*args, **kwargs):
         c.write_configuration(chip_key, registers)
 
     # verify
-    ok, diff = c.verify_configuration(timeout=1)
-    for chip_key in diff:
-        c.write_configuration(chip_key, diff[chip_key])
+    #for chip_key in c.chips:
+    #    ok, diff = c.verify_configuration(chip_key,timeout=0.01)
+    #    for chip_key in diff:
+    #        c.write_configuration(chip_key, diff[chip_key])
     c.io.double_send_packets = False    
 
     return c
