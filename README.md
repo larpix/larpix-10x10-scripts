@@ -17,6 +17,11 @@ of the LArPix 10x10 tile.
 ├── load_config.py                                      - Helper script for loading chip configurations
 ├── pedestal.py                                         - Script for assessing channel pedestals
 ├── README.md                                           - This is me
+├── firmware                                            - Directory containing pacman firmware files
+│   ├── BOOT.BIN                                        - Boot binary (contains PL configuration)
+│   ├── image.ub                                        - Petalinux kernel
+│   ├── rootfs.tar.gz                                   - Petalinux rootfs
+│   └── README.md                                       - Firmware description
 └── start_run.py                                        - Script for loading chip configs and collecting self-trigger data
 
 # base.py
@@ -68,3 +73,4 @@ This scripts loads chip configurations and then continuously collects data in in
 nominal self-trigger data. For a description of arguments, run::
 
         python3 start_run.py --help
+
