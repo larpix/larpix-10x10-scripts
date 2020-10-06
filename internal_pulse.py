@@ -10,7 +10,6 @@ import larpix.io
 import larpix.logger
 
 import base
-import base_warm
 import load_config
 
 import argparse
@@ -28,18 +27,18 @@ _default_channels=[
         33, 34, 35, 36, 37, 41, 42, 43, 44, 45, 46, 47, 48,
         49, 50, 51, 52, 53, 58, 59, 60, 61, 62, 63
         ]
-_default_runtime=0.01
+_default_runtime=0.1
 _default_start_dac=95
 
 def main(config_name=_default_config_name, controller_config=_default_controller_config, chip_key=_default_chip_key, pulse_dac=_default_pulse_dac, n_pulses=_default_n_pulses, channels=_default_channels, runtime=_default_runtime, start_dac=_default_start_dac):
-    print('internal pulse')
+    print('START INTERNAL PULSE')
     pulse_dac = int(pulse_dac)
     n_pulses = int(n_pulses)
 
     # create controller
     c = None
     if config_name is None:
-        c = base_warm.main(controller_config, logger=True)
+        c = base.main(controller_config, logger=True)
     else:
         if controller_config is None:
             c = load_config.main(config_name, logger=True)
@@ -79,8 +78,8 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         c.io.double_send_packets = True
         for chip_key in chips_to_test:
             c.enable_testpulse(chip_key, [channel], start_dac)
-            base.flush_data(c, rate_limit=len(c.chips)*len(64))
-            total_expected[(chip_key,channel)] += n_pulses
+            total_expected_inwindow[(chip_key,channel)] += n_pulses
+        base.flush_data(c, runtime=runtime, rate_limit=len(c.chips)*64)
         c.io.double_send_packets = False        
             
         for i in range(n_pulses):
@@ -89,12 +88,14 @@ def main(config_name=_default_config_name, controller_config=_default_controller
                 
             c.logger.enable()
             c.multi_write_configuration(
-                [(chip_key, 'csa_testpulse_dac') for chip_key in chips_to_test],
+                [(chip_key, c.chips[chip_key].config.register_map['csa_testpulse_dac'])
+                 for chip_key in chips_to_test],
                 write_read=runtime,
                 connection_delay=0.01
             )
             c.logger.disable()
-            c.enable_testpulse(chip_key, [channel], start_dac)            
+            for chip_key in chips_to_test:
+                c.enable_testpulse(chip_key, [channel], start_dac)            
 
             total_windows += 1
             triggers = map(tuple,c.reads[-1].extract('chip_key','channel_id',packet_type=0))
@@ -104,7 +105,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
                 else:
                     total_outwindow[trigger] += 1
 
-            print('\tpulse',i,'/',n_pulses,end='\r')
+            print('\tpulse',i+1,'/',n_pulses,len(c.reads[-1]),'packets',end='\r')
         print()
         
         for chip_key in chips_to_test:
@@ -115,18 +116,23 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             
     print()
     print('summary:')
-    print('channels responding (>0 efficiency): {}/{}'.format(
-        channels_responding(total_inwindow, expected_trigs), len(chips_to_test)*len(channels)
+    print('channels responding (>0 efficiency): {}/{} ({:0.2f})'.format(
+        channels_responding(total_inwindow), len(chips_to_test)*len(channels),
+        channels_responding(total_inwindow)/(len(chips_to_test)*len(channels))
         ))
-    print('channels with high efficiency (>0.85 efficiency): {}/{}'.format(
-        channels_responding_w_high_eff(total_inwindow, expected_trigs, cutoff=0.85), len(chips_to_test)*len(channels)
+    print('channels with high efficiency (>0.85 efficiency): {}/{} ({:0.2f})'.format(
+        channels_responding_w_high_eff(total_inwindow, total_expected_inwindow, cutoff=0.85),
+        len(chips_to_test)*len(channels), \
+        channels_responding_w_high_eff(total_inwindow, total_expected_inwindow, cutoff=0.85) / (len(chips_to_test)*len(channels))
         ))
     print('overall efficiency (per channel): {:0.2f}'.format(
-        overall_efficiency(total_inwindow, expected_trigs)        
+        overall_efficiency(total_inwindow, total_expected_inwindow)        
         ))
     print('overall cross-talk (per channel): {:0.2f}'.format(
-        overall_cross_talk(n_pulses, total_windows, outwindow_trigs)
+        overall_cross_talk(n_pulses, total_windows, total_outwindow) / (len(chips_to_test))
         ))
+
+    print('END INTERNAL PULSE')
     return c
 
 def channels_responding(total_inwindow):
@@ -139,24 +145,24 @@ def channels_responding_w_high_eff(total_inwindow, expected_trigs, cutoff=0.75):
 
 def overall_efficiency(inwindow_trigs, expected_trigs):
     ''' Average trigger efficiency across channels (includes non-responsive channels)'''
-    return sum([inwindow_trigs[key]/(expected_trigs[key]+1e-15) for key in expected_trigs]) / (len(expected_trigs)+1e-15)
+    return sum([min(inwindow_trigs[key]/(expected_trigs[key]+1e-15),1) for key in expected_trigs]) / (len(expected_trigs)+1e-15)
 
 def overall_cross_talk(npulses, total_windows, outwindow_trigs):
-    ''' Average trigger efficiency across channels to test pulses on other channels '''
+    ''' Average number of channels triggering on test pulses to other channels '''
     if len(outwindow_trigs) == 0:
         return 0.
-    return sum([trigs for key,trigs in outwindow_trigs) / (abs(total_windows - npulses * len(outwindow_trigs)) + 1e-15)
+    return sum([trigs for key,trigs in outwindow_trigs]) / (abs(total_windows - npulses * len(outwindow_trigs)) + 1e-15)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_name', default=_default_config_name, type=str)
-    parser.add_argument('--controller_config', default=_default_controller_config, type=str)
-    parser.add_argument('--chip_key', default=_default_chip_key, type=str)
-    parser.add_argument('--pulse_dac', default=_default_pulse_dac, type=int)
-    parser.add_argument('--n_pulses', default=_default_n_pulses, type=int)
-    parser.add_argument('--channels', default=_default_channels, type=json.loads)
-    parser.add_argument('--runtime', default=_default_runtime, type=float)
-    parser.add_argument('--start_dac', default=_default_start_dac, type=int)
+    parser.add_argument('--config_name', default=_default_config_name, type=str, help='''Directory or file to load chip configs from''')
+    parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network config file''')
+    parser.add_argument('--chip_key', default=_default_chip_key, type=str, help='''If specified, only pulse specified chip key''')
+    parser.add_argument('--pulse_dac', default=_default_pulse_dac, type=int, help='''Amplitude for test pulses in DAC counts (default=%(default)s)''')
+    parser.add_argument('--n_pulses', default=_default_n_pulses, type=int, help='''Number of test pulses to issue on each channel (default=%(default)s)''')
+    parser.add_argument('--channels', default=_default_channels, type=json.loads, help='''List of channels to issue test pulses on (default=%(default)s)''')
+    parser.add_argument('--runtime', default=_default_runtime, type=float, help='''Time window to collect data after issuing each test pulse (in seconds) (default=%(default)s)''')
+    parser.add_argument('--start_dac', default=_default_start_dac, type=int, help='''Starting DAC value to issue test pulses from (default=%(default)s)''')
     args = parser.parse_args()
     c = main(**vars(args))
