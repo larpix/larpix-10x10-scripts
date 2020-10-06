@@ -1,3 +1,11 @@
+'''
+Collect data using LArPix internal periodic trigger
+
+Usage:
+
+        python3 pedestal.py <args>
+'''
+
 import sys
 import argparse
 import json
@@ -6,11 +14,19 @@ import larpix
 import larpix.io
 
 import base
-import base_warm
 
-def main(controller_config=None, periodic_trigger_cycles=1281, runtime=60, channels=[0], chip_key='1-1-23', disabled_channels=None, *args, **kwargs):
+_default_controller_config=None
+_default_periodic_trigger_cycles=100000
+_default_runtime=60
+_default_channels=range(64)
+_default_chip_key=None
+_default_disabled_channels=[]
+
+def main(controller_config=_default_controller_config, periodic_trigger_cycles=_default_periodic_trigger_cycles, runtime=_default_runtime, channels=_default_channels, chip_key=_default_chip_key, disabled_channels=_default_disabled_channels, *args, **kwargs):
+    print('START PEDESTAL')
+    
     # create controller
-    c = base_warm.main(controller_config_file=controller_config, logger=True)
+    c = base.main(controller_config_file=controller_config, logger=True)
 
     # set args
     chip_keys = [chip_key]
@@ -31,11 +47,9 @@ def main(controller_config=None, periodic_trigger_cycles=1281, runtime=60, chann
         chip.config.enable_periodic_trigger = 1
         chip.config.enable_rolling_periodic_trigger = 1
         chip.config.enable_periodic_reset = 1
-        #chip.config.enable_rolling_periodic_reset = 1 # non-default
-        chip.config.enable_rolling_periodic_reset = 0
+        chip.config.enable_rolling_periodic_reset = 1
         chip.config.enable_hit_veto = 0
-        #chip.config.periodic_reset_cycles = 1 # non-default
-        chip.config.periodic_reset_cycles = 4096
+        chip.config.periodic_reset_cycles = 64
 
         for channel in disabled_channels:
             chip.config.csa_enable[channel] = 0
@@ -74,16 +88,17 @@ def main(controller_config=None, periodic_trigger_cycles=1281, runtime=60, chann
     print('packets read',len(c.reads[-1]))
     c.logger.disable()
 
+    print('END PEDESTAL')
     return c
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--controller_config', default=None, type=str)
-    parser.add_argument('--periodic_trigger_cycles', default=1281, type=int)
-    parser.add_argument('--runtime', default=60, type=float)
-    parser.add_argument('--channels', default=range(64), type=json.loads)
-    parser.add_argument('--chip_key', default=None, type=str)
-    parser.add_argument('--disabled_channels', default=None, type=json.loads)        
+    parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
+    parser.add_argument('--periodic_trigger_cycles', default=_default_periodic_trigger_cycles, type=int, help='''Periodic trigger rate in LArPix clock cycles (default=%(default)s))''')
+    parser.add_argument('--runtime', default=_default_runtime, type=float, help='''Duration to collect data (in seconds (default=%(default)s)''')
+    parser.add_argument('--channels', default=_default_channels, type=json.loads, help='''List of channels to collect data from (json formatting)''')
+    parser.add_argument('--chip_key', default=_default_chip_key, type=str, help='''If specified, only collect data from specified chip key''')
+    parser.add_argument('--disabled_channels', default=_default_disabled_channels, type=json.loads, help='''List of channels to disable (json formatting)''')
     args = parser.parse_args()
     c = main(**vars(args))
 
