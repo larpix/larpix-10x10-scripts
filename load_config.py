@@ -2,13 +2,14 @@
 Creates a base controller object and loads the specified configuration onto the chip
 
 Usage:
-    python3 -i load_config.py <configuration name>
+    python3 -i load_config.py --config_name <configuration name>
 
 '''
 
 import sys
 import os
 import glob
+import argparse
 
 import larpix
 import larpix.io
@@ -16,13 +17,16 @@ import larpix.logger
 
 import base
 
+_default_config_name='configs/'
+_default_controller_config=None
+
 config_format = 'config-{chip_key}-*.json'
 
-def main(config_name, *args, **kwargs):
-    print('load config')
+def main(config_name=_default_config_name, controller_config=_default_controller_config, *args, **kwargs):
+    print('START LOAD CONFIG')
 
     # create controller
-    c = base.main(*args, **kwargs)
+    c = base.main(controller_config, *args, **kwargs)
 
     # set configuration
     if not os.path.isdir(config_name):
@@ -39,18 +43,26 @@ def main(config_name, *args, **kwargs):
 
     # write configuration
     c.io.double_send_packets = True
-    for chip_key, chip in c.chips.items():
+    c.io.group_packets_by_io_group = False
+    for chip_key, chip in reversed(c.chips.items()):
         c.write_configuration(chip_key)
         c.write_configuration(chip_key)
+        base.flush_data(c)
 
     # verify
     for chip_key in c.chips:
-        ok, diff = c.verify_configuration(chip_key, timeout=0.01)
+        ok, diff = c.verify_configuration(chip_key, timeout=0.1)
         if not ok:
             print('config error',diff)
+        print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
     c.io.double_send_packets = False
 
+    print('END LOAD CONFIG')
     return c
 
 if __name__ == '__main__':
-    c = main(*sys.argv[1:])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
+    parser.add_argument('--config_name', default=_default_config_name, type=str, help='''Directory or file to load chip configurations from (default=%(default)s)''')
+    args = parser.parse_args()
+    c = main(**vars(args))
