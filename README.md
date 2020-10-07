@@ -3,26 +3,29 @@ This directory contains a variety of scripts and configurations that assess the 
 of the LArPix 10x10 tile.
 
 # Structure
-├── autoconfig_thresholds.py                            - Script to automatically configure channel thresholds
-├── base.py                                             - Script to bring up communication with tile
-├── configs                                             - Directory containing chip configurations
-│   └── autothreshold_base.json                         - Base chip config used by autoconfig_thresholds.py
-├── controller                                          - Directory containing hydra network config files
-│   ├── network-10x10-tile-11only.json                  - Network config with chip 11 enabled only
-│   └── network-10x10-tile-4root-daisychain.json        - Network config with 4 daisy chain networks
-├── internal_pulse.py                                   - Script to issue test pulses on chips
-├── io                                                  - Directory containing io config files
-│   └── pacman.json                                     - IO config file for pacman card
-├── leakage_current_rough.py                            - Script for assessing front-end leakage current
-├── load_config.py                                      - Helper script for loading chip configurations
-├── pedestal.py                                         - Script for assessing channel pedestals
-├── README.md                                           - This is me
-├── firmware                                            - Directory containing pacman firmware files
-│   ├── BOOT.BIN                                        - Boot binary (contains PL configuration)
-│   ├── image.ub                                        - Petalinux kernel
-│   ├── rootfs.tar.gz                                   - Petalinux rootfs
-│   └── README.md                                       - Firmware description
-└── start_run.py                                        - Script for loading chip configs and collecting self-trigger data
+This repo contains the following::
+
+     ├── autoconfig_thresholds.py                            - Script to automatically configure channel thresholds
+     ├── base.py                                             - Script to bring up communication with tile
+     ├── configs                                             - Directory containing chip configurations
+     │   └── autothreshold_base.json                         - Base chip config used by autoconfig_thresholds.py
+     ├── controller                                          - Directory containing hydra network config files
+     │   ├── network-10x10-tile-11only.json                  - Network config with chip 11 enabled only
+     │   └── network-10x10-tile-4root-daisychain.json        - Network config with 4 daisy chain networks
+     ├── internal_pulse.py                                   - Script to issue test pulses on chips
+     ├── io                                                  - Directory containing io config files
+     │   └── pacman.json                                     - IO config file for pacman card
+     ├── leakage_current_rough.py                            - Script for assessing front-end leakage current
+     ├── load_config.py                                      - Helper script for loading chip configurations
+     ├── pedestal.py                                         - Script for assessing channel pedestals
+     ├── README.md                                           - This is me
+     ├── firmware                                            - Directory containing pacman firmware files
+     │   ├── BOOT.BIN                                        - Boot binary (contains PL configuration)
+     │   ├── image.ub                                        - Petalinux kernel
+     │   ├── rootfs-wlocal.tar.gz                            - Custom petalinux rootfs
+     │   └── README.md                                       - Firmware description
+     └── start_run.py                                        - Script for loading chip configs and collecting self-trigger data
+
 
 # base.py
 This script is runs the baseline bring-up procedure to reset the chip configurations, bring up the hydra
