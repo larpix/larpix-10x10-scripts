@@ -48,10 +48,10 @@ def main(controller_config_file=_default_controller_config, logger=_default_logg
 
     # set larpix power voltages (pacman only)
     print('Setting larpix power...')
-    c.io.set_vddd(_vddd_dac)[1]
-    c.io.set_vdda(_vdda_dac)[1]
     mask = c.io.enable_tile()[1]
     print('tile enabled?:',hex(mask))
+    c.io.set_vddd(_vddd_dac)[1]
+    c.io.set_vdda(_vdda_dac)[1]
     vddd,iddd = c.io.get_vddd()[1]
     vdda,idda = c.io.get_vdda()[1] 
     print('VDDD:',vddd,'mV')
