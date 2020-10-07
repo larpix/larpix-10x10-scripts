@@ -45,16 +45,18 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     c.io.double_send_packets = True
     c.io.group_packets_by_io_group = False
     for chip_key, chip in reversed(c.chips.items()):
+        print('write',chip_key)
         c.write_configuration(chip_key)
         c.write_configuration(chip_key)
-        base.flush_data(c)
+    base.flush_data(c)
 
     # verify
+    print('verifying')
     for chip_key in c.chips:
         ok, diff = c.verify_configuration(chip_key, timeout=0.1)
         if not ok:
             print('config error',diff)
-        print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
+            print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
     c.io.double_send_packets = False
 
     print('END LOAD CONFIG')
