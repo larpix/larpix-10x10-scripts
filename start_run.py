@@ -33,20 +33,29 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         else:
             c = load_config.main(config_name, controller_config, logger=True)
 
-    c.start_listening()
     while True:
+        counter = 0
         start_time = time.time()
+        last_time = start_time
         c.logger = larpix.logger.HDF5Logger()
         print('new run file at ',c.logger.filename)
         c.logger.enable()
+        c.start_listening()
         while True:
             try:
-                c.read()
+                pkts, bs = c.read()
+                counter += len(pkts)
                 c.reads = []
-                if time.time() > start_time + runtime: break
+                now = time.time()
+                if now > start_time + runtime: break
+                if now > last_time + 1:
+                    print('average rate: {:0.2f}Hz\r'.format(counter/(time.time()-start_time)),end='')
+                    last_time = now
             except:
                 c.logger.flush()
                 raise
+        c.stop_listening()
+        c.read()
         c.logger.flush()
 
     print('END RUN')
