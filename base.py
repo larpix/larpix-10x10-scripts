@@ -39,7 +39,7 @@ def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
         if len(controller.reads[-1])/runtime <= rate_limit:
             break
         
-def main(controller_config=_default_controller_config, logger=_default_logger, reset=_default_reset):
+def main(controller_config=_default_controller_config, logger=_default_logger, reset=_default_reset, **kwargs):
     print('START BASE')
 
     # create controller
