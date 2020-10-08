@@ -68,7 +68,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         print('filename:',c.logger.filename)
         c.logger.enable()
 
-    if controller_config_file is None:
+    if controller_config is None:
         c.add_chip(larpix.Key(1, _default_io_channel, _default_chip_id))
         c.add_network_node(1, _default_io_channel, c.network_names, 'ext', root=True)
         c.add_network_link(1, _default_io_channel, 'miso_us', ('ext',_default_chip_id), 0)
