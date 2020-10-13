@@ -29,17 +29,34 @@ _default_disabled_channels = [
 
 _default_runtime = 1
 _default_target_rate = 2
+_default_disable_threshold = 20
+_default_reset_threshold = 10000
 
-def main(controller_config=None, chip_key=None, channels=_default_channels, disabled_channels={None:_default_disabled_channels}.copy(), runtime=_default_runtime, target_rate=_default_target_rate, base_config=_default_config):
+def _reset_and_reload(c, controller_config):
+    print('start resetting and reloading configs')
+    c_new = base.main(controller_config_file=controller_config)
+    for chip_key in c.chips:
+        print('load config',chip_key)
+        c_new[chip_key].config = c[chip_key].config
+        c.write_configuration(chip_key)
+        ok, diff = c.verify_configuration(chip_key, timeout=0.1)
+        if not ok:
+            print('config error',diff[chip_key])
+    print('done resetting and reloading configs')
+    return c_new
+
+def main(controller_config=None, chip_key=None, channels=_default_channels, disabled_channels={None:_default_disabled_channels}.copy(), runtime=_default_runtime, target_rate=_default_target_rate, base_config=_default_config, disable_threshold=_default_disable_threshold, reset_threshold=_default_reset_threshold):
     print('START AUTOCONFIG')
     
     # create controller
     c = base.main(controller_config_file=controller_config)    
 
     print()
+    print('base config',base_config)
     print('enabled channels',channels)
     print('disabled channels',disabled_channels)
     print('target rate',target_rate)
+    print('disable threshold',disable_threshold)
     print('runtime',runtime)
 
     test_chip_keys = []
@@ -58,6 +75,8 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     for chip_key in chips_to_configure:
         if None in disabled_channels:
             _default_ignore[chip_key] += disabled_channels[None]
+        if "All" in disabled_channels:
+            _default_ignore[chip_key] += disabled_channels["All"]
         if chip_key in disabled_channels:
             _default_ignore[chip_key] += disabled_channels[chip_key]
         channels_to_configure = defaultdict(list, [(chip_key,channels.copy()) for chip_key in chips_to_configure])
@@ -81,25 +100,35 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
         ok, diff = c.verify_configuration(chip_key, timeout=0.1)
         if not ok:
             print('config error',diff[chip_key])
-        base.flush_data(c)
+            base.flush_data(c)
         c.io.double_send_packets = True
 
         # verify no high rate channels
         repeat = True
         while repeat:
-            print('check rate',chip_key)
+            print('check rate',chip_key,end=' ')
             repeat = False
             base.flush_data(c)
             c.multi_read_configuration(read_config_spec,timeout=runtime/10,message='rate check')
-            triggered_channels = c.reads[-1].extract('channel_id',chip_key=chip_key,packet_type=0)
-            for channel in set(triggered_channels):
-                rate = triggered_channels.count(channel)/(runtime/10)
-                if rate > target_rate and channel in channels_to_configure[chip_key] \
-                   and chip_key in c.chips:
-                    print('disable',chip_key,channel,'rate was',rate,'Hz')
-                    c.disable(chip_key,[channel])
-                    channels_to_configure[chip_key].remove(channel)
-                    repeat = True
+            triggered_channels = c.reads[-1].extract('chip_key','channel_id',chip_key=chip_key,packet_type=0)
+            print('(total rate={}Hz)'.format(len(triggered_channels)/(runtime/10)))
+            rates = dict([(channel, triggered_channels.count(list(channel))/(runtime/10)) for channel in set(map(tuple,triggered_channels))])
+            if rates:
+                max_rate = max(rates.values())
+                for channel,rate in rates.items():
+                    chip_key,channel = channel
+                    if rate > target_rate and channel in channels_to_configure[chip_key] \
+                       and chip_key in c.chips and rate == max_rate:
+                        print('disable',chip_key,channel,'rate was',rate,'Hz')
+                        c.disable(chip_key,[channel])
+                        c[chip_key].config.csa_enable[channel] = 0
+                        c.write_configuration(chip_key,'csa_enable')
+                        channels_to_configure[chip_key].remove(channel)
+                        repeat = True
+                    if rate > reset_threshold:
+                        c = _reset_and_reload(c,controller_config)
+            if repeat:
+                c.write_configuration(chip_key)
             c.reads = []
 
     # walk down global threshold
@@ -109,10 +138,11 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     target_reached = False
     while any(repeat.values()) or not len(repeat.values()):
         # check rate
-        print('check rate')
+        print('check rate',end=' ')
         base.flush_data(c)
         c.multi_read_configuration(read_config_spec,timeout=runtime,message='rate check')
         triggered_channels = c.reads[-1].extract('chip_key','channel_id',packet_type=0)
+        print('(total rate={}Hz)'.format(len(triggered_channels)/runtime))
         for chip_key, channel in set(map(tuple,triggered_channels)):
             rate = triggered_channels.count([chip_key,channel])/runtime
             if rate > target_rate and channel in channels_to_configure[chip_key] \
@@ -124,7 +154,8 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
                 print('\tthreshold',c[chip_key].config.threshold_global)
                 c.write_configuration(chip_key,'threshold_global')
                 c.write_configuration(chip_key,'threshold_global')                
-
+            if rate > reset_threshold:
+                c = _reset_and_reload(c,controller_config)
 
         # walk down global threshold
         if not target_reached:
@@ -147,10 +178,11 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     above_target = defaultdict(lambda : False)
     for _ in range(10):
         # check rate
-        print('check rate')
+        print('check rate',end=' ')
         base.flush_data(c)
         c.multi_read_configuration(read_config_spec,timeout=runtime,message='rate check')
         triggered_channels = c.reads[-1].extract('chip_key','channel_id',packet_type=0)
+        print('(total rate={}Hz)'.format(len(triggered_channels)/runtime))        
         for chip_key, channel in set(map(tuple,triggered_channels)):
             rate = triggered_channels.count([chip_key,channel])/runtime
             if rate > target_rate and channel in channels_to_configure[chip_key] \
@@ -160,7 +192,9 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
                 c[chip_key].config.threshold_global = min(c[chip_key].config.threshold_global+1,255)
                 print('\tthreshold',c[chip_key].config.threshold_global)
                 c.write_configuration(chip_key,'threshold_global')
-                c.write_configuration(chip_key,'threshold_global')                
+                c.write_configuration(chip_key,'threshold_global')
+            if rate > reset_threshold:
+                c = _reset_and_reload(c,controller_config)
 
         # continue once rate is below target
         if not above_target or not any(above_target.values()):
@@ -176,10 +210,11 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     target_reached = False
     while any(repeat.values()) or not len(repeat.values()):
         # check rate
-        print('check rate')
+        print('check rate',end=' ')
         base.flush_data(c)
         c.multi_read_configuration(read_config_spec,timeout=runtime,message='rate check')
         triggered_channels = c.reads[-1].extract('chip_key','channel_id',packet_type=0)
+        print('(total rate={}Hz)'.format(len(triggered_channels)/runtime))        
         for chip_key, channel in set(map(tuple,triggered_channels)):
             rate = triggered_channels.count([chip_key,channel])/runtime
             if rate > target_rate and channel in channels_to_configure[chip_key] \
@@ -187,11 +222,18 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
                 print('reached target',chip_key,channel,'rate was',rate,'Hz')
                 if repeat[(chip_key, channel)]:
                     target_reached = True
+                if c[chip_key].config.pixel_trim_dac[channel] == 31 and rate > disable_threshold:
+                    c.disable(chip_key,[channel])
+                    c[chip_key].config.csa_enable[channel] = 0
+                    c.write_configuration(chip_key,'csa_enable')                    
+                    print('disable threshold reached')                    
                 repeat[(chip_key,channel)] = False
                 c[chip_key].config.pixel_trim_dac[channel] = min(c[chip_key].config.pixel_trim_dac[channel]+1,31)
                 print('\ttrim',c[chip_key].config.pixel_trim_dac[channel])
                 c.write_configuration(chip_key,'pixel_trim_dac')
-                c.write_configuration(chip_key,'pixel_trim_dac')                
+                c.write_configuration(chip_key,'pixel_trim_dac')
+            if rate > reset_threshold:
+                c = _reset_and_reload(c,controller_config)            
 
         # walk down trims
         if not target_reached:
@@ -217,20 +259,28 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     above_target = defaultdict(lambda : False)
     for _ in range(10):
         # check rate
-        print('check rate')
+        print('check rate',end=' ')
         base.flush_data(c)
         c.multi_read_configuration(read_config_spec,timeout=runtime,message='rate check')
         triggered_channels = c.reads[-1].extract('chip_key','channel_id',packet_type=0)
+        print('(total rate={}Hz)'.format(len(triggered_channels)/runtime))        
         for chip_key, channel in set(map(tuple,triggered_channels)):
             rate = triggered_channels.count([chip_key,channel])/runtime
             if rate > target_rate and channel in channels_to_configure[chip_key] \
                and not above_target[(chip_key,channel)] and chip_key in c.chips:
                 print('increasing pixel trim',chip_key,channel,'rate was',rate,'Hz')
                 above_target[(chip_key,channel)] = True
+                if c[chip_key].config.pixel_trim_dac[channel] == 31 and rate > disable_threshold:
+                    c.disable(chip_key,[channel])
+                    c[chip_key].config.csa_enable[channel] = 0
+                    c.write_configuration(chip_key,'csa_enable')                    
+                    print('disable threshold reached')
                 c[chip_key].config.pixel_trim_dac[channel] = min(c[chip_key].config.pixel_trim_dac[channel]+1,31)
                 print('\ttrim',c[chip_key].config.pixel_trim_dac[channel])
                 c.write_configuration(chip_key,'pixel_trim_dac')
-                c.write_configuration(chip_key,'pixel_trim_dac')                
+                c.write_configuration(chip_key,'pixel_trim_dac')
+            if rate > reset_threshold:
+                c = _reset_and_reload(c,controller_config)
 
         # continue once rate is below target
         if not above_target or not any(above_target.values()):
@@ -265,11 +315,13 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--controller_config', default=None, type=str)
+    parser.add_argument('--base_config', default=_default_config, type=str, help='''Chip configuration to load prior to threshold scan (default=%(default)s)''')    
     parser.add_argument('--chip_key', default=None, type=str, help='''defaults to all chips''')
     parser.add_argument('--channels', default=_default_channels, type=json.loads)
     parser.add_argument('--disabled_channels', default={None:_default_disabled_channels}.copy(), type=json.loads,
-                        help='''json-formatted list of channels to disable: {<chip-key>:[<list of channels>]}, use <chip-key>=null for channels to disable on all chips''')
-    parser.add_argument('--runtime', default=_default_runtime, type=float)
-    parser.add_argument('--target_rate', default=_default_target_rate, type=float)
+                        help='''json-formatted list of channels to disable: {<chip-key>:[<list of channels>]}, use <chip-key>="All" for channels to disable on all chips''')
+    parser.add_argument('--runtime', default=_default_runtime, type=float, help='''period to measure rate for (seconds, default=%(default)s)''')
+    parser.add_argument('--target_rate', default=_default_target_rate, type=float, help='''target max rate for individual channel (Hz, default=%(default)s)''')
+    parser.add_argument('--disable_threshold', default=_default_disable_threshold, type=float, help='''maximum rate allowed with trim at 31 (Hz, default=%(default)s)''')    
     args = parser.parse_args()
     c = main(**vars(args))
