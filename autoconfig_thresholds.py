@@ -49,7 +49,7 @@ def main(controller_config=None, chip_key=None, channels=_default_channels, disa
     print('START AUTOCONFIG')
     
     # create controller
-    c = base.main(controller_config_file=controller_config)    
+    c = base.main(controller_config=controller_config)    
 
     print()
     print('base config',base_config)

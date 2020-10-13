@@ -26,7 +26,7 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
     print('START PEDESTAL')
     
     # create controller
-    c = base.main(controller_config_file=controller_config, logger=True)
+    c = base.main(controller_config=controller_config, logger=True)
 
     # set args
     chip_keys = [chip_key]
