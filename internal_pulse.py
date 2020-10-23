@@ -61,12 +61,12 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         c.write_configuration(chip_key, registers)
     
     # verify
-    for chip_key in chips_to_test:
-        ok, diff = c.verify_configuration(chip_key, timeout=0.01)
-        if not ok:
-            print('config error',diff)
-        else:
-            print('config ok')
+    #for chip_key in chips_to_test:
+    #    ok, diff = c.verify_configuration(chip_key, timeout=0.01)
+    #    if not ok:
+    #        print('config error',diff)
+    #    else:
+    #        print('config ok')
 
     # issue pulses
     total_inwindow = defaultdict(int)

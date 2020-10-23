@@ -1,0 +1,12 @@
+{
+    "_config_type": "chip",
+    "class": "Configuration_v2",
+    "register_values": {
+        "pixel_trim_dac": [31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31],
+        "threshold_global": 255,
+        "enable_periodic_reset": 1,
+        "enable_rolling_periodic_reset": 1,
+        "enable_hit_veto": 1,
+        "periodic_reset_cycles": 64
+    }
+}

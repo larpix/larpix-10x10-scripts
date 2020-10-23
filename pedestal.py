@@ -27,6 +27,7 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
     
     # create controller
     c = base.main(controller_config=controller_config, logger=True)
+    c.io.group_packets_by_io_group = False
 
     # set args
     chip_keys = [chip_key]
@@ -47,9 +48,9 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
         chip.config.enable_periodic_trigger = 1
         chip.config.enable_rolling_periodic_trigger = 1
         chip.config.enable_periodic_reset = 1
-        chip.config.enable_rolling_periodic_reset = 1
+        chip.config.enable_rolling_periodic_reset = 0
         chip.config.enable_hit_veto = 0
-        chip.config.periodic_reset_cycles = 64
+        chip.config.periodic_reset_cycles = 4096
 
         for channel in disabled_channels:
             chip.config.csa_enable[channel] = 0

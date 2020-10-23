@@ -10,7 +10,7 @@ import json
 _default_controller_config=None
 _default_chip_key=None
 _default_threshold=128
-_default_runtime=60
+_default_runtime=1
 _default_channels=range(64)
 
 def main(controller_config=_default_controller_config, chip_key=_default_chip_key, threshold=_default_threshold, runtime=_default_runtime, channels=_default_channels):
@@ -59,7 +59,12 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
             len(c.reads[-1])/runtime, len(c.reads[-1])/runtime/len(channels)))
         
         c.io.double_send_packets = True
-        c.disable(chip_key)
+        for channel in channels:
+            c[chip_key].config.channel_mask[channel] = 1
+        c[chip_key].config.threshold_global = 255
+        c.write_configuration(chip_key, registers)
+        c.write_configuration(chip_key, registers)
+        #c.disable(chip_key)
 
     print('END ROUGH LEAKAGE')
     return c

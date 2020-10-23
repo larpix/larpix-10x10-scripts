@@ -52,11 +52,12 @@ def main(config_name=_default_config_name, controller_config=_default_controller
 
     # verify
     print('verifying')
-    for chip_key in c.chips:
-        ok, diff = c.verify_configuration(chip_key, timeout=0.1)
-        if not ok:
-            print('config error',diff)
-            print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
+    print('SKIPPING VERIFY!!!')
+    #for chip_key in c.chips:
+    #    ok, diff = c.verify_configuration(chip_key, timeout=0.1)
+    #    if not ok:
+    #        print('config error',diff)
+    #        print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
     c.io.double_send_packets = False
 
     print('END LOAD CONFIG')

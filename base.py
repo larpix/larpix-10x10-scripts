@@ -112,6 +112,10 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         registers = []
         register_map = c[chip_key].config.register_map
 
+        c[chip_key].config.vref_dac = 185
+        registers += list(register_map['vref_dac'])
+        registers += list(register_map['vcm_dac'])
+        c[chip_key].config.vcm_dac = 41
         c[chip_key].config.csa_gain = 0 # high gain
         #c[chip_key].config.csa_gain = 1 # low gain        
         registers += list(register_map['csa_gain'])
@@ -130,7 +134,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
             for key in diff:
                 print('config error',key,diff[key])
     c.io.double_send_packets = False
-    c.io.group_packets_by_io_group = True
+    #c.io.group_packets_by_io_group = True
 
     print('END BASE')
     return c
