@@ -60,6 +60,9 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     #        print('packets',len(c.reads[-1].extract('packet_type',packet_type=0)))
     c.io.double_send_packets = False
 
+    if hasattr(c,'logger') and c.logger:
+        c.logger.record_configs(list(c.chips.values()))
+
     print('END LOAD CONFIG')
     return c
 

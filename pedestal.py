@@ -79,7 +79,8 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
         ok, diff = c.verify_configuration(chip_key, timeout=0.01)
         if not ok:
             print('config error',diff)
-    c.io.double_send_packets = True    
+    c.io.double_send_packets = True
+    c.logger.record_configs(list(c.chips.values()))
 
     print('start pedestal run')
     base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))

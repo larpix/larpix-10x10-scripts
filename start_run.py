@@ -40,13 +40,17 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         c[chip].config.external_trigger_mask[external_trigger_channel] = 0
         c[chip].config.channel_mask[external_trigger_channel] = 0
         c.write_configuration(chip)
+    c.io.set_reg(0x02014,0xFFFF) # disable forward triggers to larpix
+    #c.io.set_reg(0x02014,0x0000) # enable forward triggers to larpix
 
     while True:
+        #break
         counter = 0
         start_time = time.time()
         last_time = start_time
         c.logger = larpix.logger.HDF5Logger(directory=outdir)
         print('new run file at ',c.logger.filename)
+        c.logger.record_configs(list(c.chips.values()))
         c.logger.enable()
         c.start_listening()
         while True:
@@ -67,6 +71,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         c.logger.flush()
 
     print('END RUN')
+    return c
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

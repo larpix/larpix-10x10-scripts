@@ -3,7 +3,7 @@
     "class": "Configuration_v2",
     "register_values": {
         "pixel_trim_dac": [31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31],
-        "threshold_global": 30,
+        "threshold_global": 35,
         "enable_periodic_reset": 1,
         "enable_rolling_periodic_reset": 1,
         "enable_hit_veto": 1,

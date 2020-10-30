@@ -136,6 +136,9 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
     c.io.double_send_packets = False
     #c.io.group_packets_by_io_group = True
 
+    if hasattr(c,'logger') and c.logger:
+        c.logger.record_configs(list(c.chips.values()))
+
     print('END BASE')
     return c
 

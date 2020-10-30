@@ -67,6 +67,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     #        print('config error',diff)
     #    else:
     #        print('config ok')
+    c.logger.record_configs(list(c.chips.values()))
 
     # issue pulses
     total_inwindow = defaultdict(int)

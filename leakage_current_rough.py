@@ -46,6 +46,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
         if not ok:
             print('config error',diff)
         c.io.double_send_packets = False
+        c.logger.record_configs([c[chip_key]])
 
         base.flush_data(c)
         print('run for',runtime,'sec')
