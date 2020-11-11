@@ -43,7 +43,8 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     c.io.set_reg(0x02014,0xFFFF) # disable forward triggers to larpix
     #c.io.set_reg(0x02014,0x0000) # enable forward triggers to larpix
 
-    while True:
+    if True:
+    #while True:
         #break
         counter = 0
         start_time = time.time()
