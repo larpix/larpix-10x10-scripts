@@ -54,8 +54,6 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
         chip.config.periodic_reset_cycles = 4096
 
         # Disable channels
-        #for channel in disabled_channels:
-        #    chip.config.csa_enable[channel] = 0
         #print(' disabling channels: ')
         for disabled_key in disabled_channels:
             if disabled_key == chip_key or disabled_key == 'All':
