@@ -6,7 +6,6 @@ import larpix
 import larpix.io
 import larpix.logger
 
-#_vddd_dac = 0xb620 # for ~1.2V operation
 _vddd_dac = 0xd8e4 # for ~1.8V operation
 _vdda_dac = 0xd8e4
 _uart_phase = 0
@@ -64,8 +63,10 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
     
     if logger:
         print('logger')
-        c.logger = larpix.logger.HDF5Logger()
+        c.logger = larpix.logger.HDF5Logger(filename=kwargs['filename'])
+        #c.logger = larpix.logger.HDF5Logger()
         print('filename:',c.logger.filename)
+        c.logger.record_configs(list(c.chips.values()))
         c.logger.enable()
 
     if controller_config is None:
@@ -112,6 +113,10 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         registers = []
         register_map = c[chip_key].config.register_map
 
+        c[chip_key].config.vref_dac = 185
+        registers += list(register_map['vref_dac'])
+        registers += list(register_map['vcm_dac'])
+        c[chip_key].config.vcm_dac = 41
         c[chip_key].config.csa_gain = 0 # high gain
         #c[chip_key].config.csa_gain = 1 # low gain        
         registers += list(register_map['csa_gain'])
@@ -121,16 +126,21 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         registers += list(register_map['enable_miso_differential'])
 
         c.write_configuration(chip_key, registers)
+        c.write_configuration(chip_key, registers)
 
     # verify
     c.io.double_send_packets = True
     for chip_key in c.chips:
-        ok,diff = c.verify_registers([(chip_key,0)],timeout=0.01)
+
+        ok,diff = c.enforce_registers([(chip_key,0)],timeout=0.01, n=10, n_verify=10)
         if not ok:
             for key in diff:
                 print('config error',key,diff[key])
     c.io.double_send_packets = False
-    c.io.group_packets_by_io_group = True
+    #c.io.group_packets_by_io_group = True
+
+    if hasattr(c,'logger') and c.logger:
+        c.logger.record_configs(list(c.chips.values()))
 
     print('END BASE')
     return c
