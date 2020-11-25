@@ -28,8 +28,9 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
     # create controller
     c = base.main(controller_config=controller_config, logger=True)
     c.io.group_packets_by_io_group = False
+    c.io.set_reg(0x02014,0xFFFF) # disable trigger forwarding
 
-    # set args
+    # set argss
     chip_keys = [chip_key]
     if chip_key is None:
         chip_keys = list(c.chips.keys())
