@@ -44,6 +44,9 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     c.io.set_reg(0x02014,0xFFFF) # disable forward triggers to larpix
     #c.io.set_reg(0x02014,0x0000) # enable forward triggers to larpix
 
+    print('Wait 3 seconds for cooling the ASICs...')
+    time.sleep(3)
+
     '''
     if disabled_channels is not None:
         for chip_key in c.chips:
@@ -75,22 +78,27 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     #while True:
         #break
         counter = 0
-        start_time = time.time()
-        last_time = start_time
+        #start_time = time.time()
+        #last_time = start_time
         c.logger = larpix.logger.HDF5Logger(directory=outdir)
         print('new run file at ',c.logger.filename)
         c.logger.record_configs(list(c.chips.values()))
         c.logger.enable()
         c.start_listening()
+        start_time = time.time()
+        last_time = start_time
         while True:
             try:
                 pkts, bs = c.read()
+                #counter += len(pkts)
                 counter += len(pkts)
                 c.reads = []
                 now = time.time()
                 if now > start_time + runtime: break
                 if now > last_time + 1:
-                    print('average rate: {:0.2f}Hz\r'.format(counter/(time.time()-start_time)),end='')
+                    #print('average rate: {:0.2f}Hz\r'.format(counter/(time.time()-start_time)),end='')
+                    print('average rate [delta_t = {:0.2f} s]: {:0.2f}Hz\r'.format(now-last_time,counter/(now-last_time)),end='')
+                    counter = 0
                     last_time = now
             except:
                 c.logger.flush()
