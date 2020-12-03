@@ -1,0 +1,42 @@
+{
+    "_config_type": "controller",
+    "name": "network-10x10-tile",
+    "asic_version": 2,
+    "layout": "2.2.0",
+    "network": {
+        "1": {
+            "1": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,  12]},
+		    {"chip_id": 12,    "miso_us": [null,null,null,  13]},
+		    {"chip_id": 13,    "miso_us": [null,null,null,  14]},
+		    {"chip_id": 14,    "miso_us": [null,null,null,  15]},
+		    {"chip_id": 15,    "miso_us": [null,null,null,  16]},
+		    {"chip_id": 16,    "miso_us": [null,null,null,  17]},
+		    {"chip_id": 17,    "miso_us": [null,null,null,  18]},
+		    {"chip_id": 18,    "miso_us": [null,null,null,  19]},
+		    {"chip_id": 19,    "miso_us": [null,null,null, 110]},
+		    {"chip_id": 110,    "miso_us": [null,null, 120,null]},
+		    {"chip_id": 120,    "miso_us": [null,  29,null,null]},
+		    {"chip_id": 29,    "miso_us": [null,  28,null,null]},
+		    {"chip_id": 28,    "miso_us": [null,  27,null,null]},
+		    {"chip_id": 27,    "miso_us": [null,  26,null,null]},
+		    {"chip_id": 26,    "miso_us": [null,  25,null,null]},
+		    {"chip_id": 25,    "miso_us": [null,  24,null,null]},
+		    {"chip_id": 24,    "miso_us": [null,  23,null,null]},
+		    {"chip_id": 23,    "miso_us": [null,  22,null,null]},
+		    {"chip_id": 22,    "miso_us": [null,  21,null,null]},
+		    {"chip_id": 21,    "miso_us": [null,null,  31,null]},
+		    {"chip_id": 31,    "miso_us": [null,null,null,  32]},
+		    {"chip_id": 32,    "miso_us": [null,null,null,  33]},
+		    {"chip_id": 33,    "miso_us": [null,null,null,  34]},
+		    {"chip_id": 34,    "miso_us": [null,null,null,null]}
+                ]
+            } 
+        },
+        "miso_us_uart_map": [ 3, 0, 1, 2 ],
+        "miso_ds_uart_map": [ 1, 2, 3, 0 ],
+        "mosi_uart_map": [ 2, 3, 0, 1 ]
+    }
+}

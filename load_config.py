@@ -19,10 +19,11 @@ import base
 
 _default_config_name='configs/'
 _default_controller_config=None
+_default_disabled_channels=None
 
 config_format = 'config-{chip_key}-*.json'
 
-def main(config_name=_default_config_name, controller_config=_default_controller_config, *args, **kwargs):
+def main(config_name=_default_config_name, controller_config=_default_controller_config, disabled_channels=_default_disabled_channels, *args, **kwargs):
     print('START LOAD CONFIG')
 
     # create controller
@@ -40,6 +41,20 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             if config_files:
                 print('loading',config_files[-1])
                 chip.config.load(config_files[-1])
+                
+    # disable any channels
+    if disabled_channels is not None:
+        for chip_key in c.chips:
+            if 'All' in disabled_channels:
+                for channel in disabled_channels['All']:
+                    c[chip_key].config.channel_mask[channel] = 1
+                    c[chip_key].config.csa_enable[channel] = 0
+            if chip_key in disabled_channels:
+                for channel in disabled_channels[chip_key]:
+                    c[chip_key].config.channel_mask[channel] = 1
+                    c[chip_key].config.csa_enable[channel] = 0
+            print('disabled',disabled_channels.get('All',[])+disabled_channels.get(chip_key,[]),
+                  'on',chip_key)
 
     # write configuration
     c.io.double_send_packets = True
@@ -70,5 +85,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
     parser.add_argument('--config_name', default=_default_config_name, type=str, help='''Directory or file to load chip configurations from (default=%(default)s)''')
+    parser.add_argument('--disabled_channels', default=_default_disabled_channels, type=json.loads, help='''Json-formatted dict of <chip_key>:[<channels>] to disable (default=%(default)s)''')
     args = parser.parse_args()
     c = main(**vars(args))
