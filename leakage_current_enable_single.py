@@ -49,15 +49,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
         c.write_configuration(chip_key, registers)
         c.write_configuration(chip_key, registers)
 
-        #registers = [64] # threshold
-        #c.write_configuration(chip_key, registers)
-        #c.write_configuration(chip_key, registers)
-
-        #registers = list(range(66,74)) # csa enable
-        #c.write_configuration(chip_key, registers)
-        #c.write_configuration(chip_key, registers)
-
-        ok, diff = c.verify_configuration(chip_key, timeout=0.01)
+        ok, diff = c.enforce_configuration(chip_key, timeout=0.01, n=10, n_verify=10)
         if not ok:
             print('config error',diff)
         c.io.double_send_packets = False
@@ -81,9 +73,6 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
         c[chip_key].config.threshold_global = 255
         c.write_configuration(chip_key, registers)
         c.write_configuration(chip_key, registers)
-        #c.write_configuration(chip_key,'csa_enable')
-        #c.write_configuration(chip_key,'csa_enable')
-        #c.disable(chip_key)
 
     print('END ROUGH LEAKAGE')
     return c
