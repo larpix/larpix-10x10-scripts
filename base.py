@@ -6,9 +6,10 @@ import larpix
 import larpix.io
 import larpix.logger
 
-#_vddd_dac = 0xb620 # for ~1.5V operation
-_vddd_dac = 0xd8e4 # for ~1.8V operation
-_vdda_dac = 0xd8e4
+#_vddd_dac = 0xd2cd # for ~1.8V operation on single chip testboard
+#_vdda_dac = 0xd2cd # for ~1.8V operation on single chip testboard
+_vddd_dac = 0xd8e4 # for ~1.8V operation on 10x10 tile
+_vdda_dac = 0xd8e4 # for ~1.8V operation on 10x10 tile
 _uart_phase = 0
 
 _default_controller_config=None
@@ -129,7 +130,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
     # verify
     c.io.double_send_packets = True
     for chip_key in c.chips:
-        ok,diff = c.verify_registers([(chip_key,0)],timeout=0.01)
+        ok,diff = c.enforce_registers([(chip_key,0)],timeout=0.01, n=10, n_verify=10)
         if not ok:
             for key in diff:
                 print('config error',key,diff[key])
