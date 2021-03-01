@@ -1,0 +1,205 @@
+{
+    "_config_type": "controller",
+    "name": "network-tpc-rootsOnly",
+    "asic_version": 2,
+    "layout": "2.5.0",
+    "network": {
+        "1": {
+            "1": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "2": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "3": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "4": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "5": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "6": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "7": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "8": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "9": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "10": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "11": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "12": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "13": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "14": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "15": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "16": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "17": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "18": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "19": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "20": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "21": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "22": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "23": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "24": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "25": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "26": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "27": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "28": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            },
+	    "29": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,11], "root": true},
+                    {"chip_id": 11,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "30": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,41], "root": true},
+		    {"chip_id": 41,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "31": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,71], "root": true},
+		    {"chip_id": 71,    "miso_us": [null,null,null,null]}
+                ]
+            },
+            "32": {
+                "nodes": [
+                    {"chip_id": "ext", "miso_us": [null,null,null,101], "root": true},
+		    {"chip_id":101,    "miso_us": [null,null,null,null]}
+                ]
+            }	    
+        },
+        "miso_us_uart_map": [ 3, 0, 1, 2 ],
+        "miso_ds_uart_map": [ 1, 2, 3, 0 ],
+        "mosi_uart_map": [ 2, 3, 0, 1 ]
+    }
+}

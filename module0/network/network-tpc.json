@@ -1,0 +1,14 @@
+{
+    "_config_type": "controller",
+    "_include": [
+	"network-tile1.json",
+	"network-tile2.json",
+	"network-tile3.json",
+	"network-tile4.json",
+	"network-tile5.json",
+	"network-tile6.json",
+	"network-tile7.json",
+	"network-tile8.json"
+    ],
+    "name": "network-tpc"
+}
