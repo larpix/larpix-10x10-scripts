@@ -102,12 +102,22 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         for io_channel in io_channels:
             chip_keys = c.get_network_keys(io_group,io_channel,root_first_traversal=False)
             for chip_key in chip_keys:
+                c[chip_key].config.enable_miso_downstream=[0]*4
+                c[chip_key].config.enable_miso_upstream=[0]*4
+                c.write_configuration(chip_key,'enable_miso_downstream')
+                c.write_configuration(chip_key,'enable_miso_upstream')
                 c[chip_key].config.clk_ctrl = _default_clk_ctrl
                 c.write_configuration(chip_key, 'clk_ctrl')
     for io_group, io_channels in c.network.items():
         for io_channel in io_channels:
             print('io_channel:',io_channel,'factor:',c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[_default_clk_ctrl], io_group=io_group))
 
+    # re-initialize network
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            print('init network {}-{}'.format(io_group,io_channel))
+            c.init_network(io_group, io_channel, modify_mosi=False)
+            
     # set any other configuration registers
     for chip_key in c.chips:
         registers = []
