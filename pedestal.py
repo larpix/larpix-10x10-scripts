@@ -60,6 +60,8 @@ def main(controller_config=_default_controller_config, periodic_trigger_cycles=_
             if disabled_key == chip_key or disabled_key == 'All':
                 for disabled_channel in disabled_channels[disabled_key]:
                     chip.config.csa_enable[disabled_channel] = 0
+                    chip.config.periodic_trigger_mask[disabled_channel] = 1
+                    chip.config.channel_mask[disabled_channel] = 1
                     #print('     ', disabled_channel)
 
         # write configuration
