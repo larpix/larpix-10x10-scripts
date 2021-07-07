@@ -34,7 +34,7 @@ _default_reset_threshold = 10000
 
 def _reset_and_reload(c, controller_config):
     print('start resetting and reloading configs')
-    c_new = base.main(controller_config_file=controller_config)
+    c_new = base.main(controller_config=controller_config)
     for chip_key in c.chips:
         print('load config',chip_key)
         c_new[chip_key].config = c[chip_key].config
