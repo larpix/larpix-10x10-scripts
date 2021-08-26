@@ -71,7 +71,7 @@ mv config-* config_[tile_db_number]
 ```
 
 ### 6. Self-trigger
-Here we want to run a self-trigger run and verify that the remaining channels are working correctly.
+Here we want to have a self-trigger run and verify that the remaining channels are working correctly.
 
 To do so we run:
 ```bash
