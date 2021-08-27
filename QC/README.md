@@ -1,20 +1,26 @@
-# Quality control procedure and metrics for LArPix-v2 rev. 2 tiles
+# Quality control procedure and metrics for LArPix-v2 rev. 2 anode tiles
 
 ## Procedure
 
-The output of the quality control procedure will be a Markdown file containing the relevant metrics and plots called `QC_Tile_[tile_db_number].md` where `[tile_db_number]` is the number of the tile in our database.
+The quality control procedure noted here will produce two output files: (a) a Markdown file containing the CI-level summary metrics and plots called `QC_Tile_[tile_id_number].md` and (b) a JSON file composed of dictionaries to track tile, ASIC, channel performance at various stages of the LArPix QC process. (TO DO: The naming scheme of the JSON file is TBD.) The `[tile_id_number]` is the tile ID assigned in the `LArPix-v2 System Parts Database` spreadsheet. This tile ID can be cross checked against two ASIC serial numbers to confirm physical tile identity. 
+
+### 0. Tile-ASIC mapping
+(TO DO: get scanning information from Leon)
+(TO DO: scan ASICs & map serial no. with 10x10 tile chip ID)
+This script will:
+- save dictionary to JSON file formatted as follows: [<tile ID>][<QC stage>]['ASIC'][<serial no., 10x10 tile chip ID>]
 
 ### 1. UART test
-First we need to establish a working Hydra configuration. To do this we run
+This test produces a Hydra network configuration and tracks broken UARTs on ASICs. The algorithm first tests `root` chips to find eligible ASICs within a tile from which a Hydra network may originate. From eligible `root` ASICs, an ASIC network is constructed, whereby after configuring each ASIC in the network chip-by-chip loopback between ASICs determines which ASICs can be reached. If a broken UART is encountered, the Hydra network is re-routed around the broken UART connection and re-checks remaining UARTs until the largest possible network is initialized. Once a network is constructed, the two-way connection between each ASIC and its neighbor is tested. Note that ASIC UARTs absent of an ASIC neighbor are not tested given the geometrical constraints of the anode tile. To run the algorithm:
 
 ```bash
 ./map_uart_links_test.py [tile_number]
 ```
 
-where `[tile_number]` is the software tile number. This script will:
-- produce a JSON file containing the Hydra configuration in the format `tile-[tile_number]-autoconfig.json`
-- write in the Markdown report the broken UARTs.
-- if possible, produce a drawing of the network configuration to be put in the Markdown report.
+where `[tile_number]` is the software tile number defining connections to PACMAN UARTs. This script will:
+- produce a JSON file containing the tile Hydra network configuration in the format `tile-[software_tile_number]-autoconfig.json` (TO DO: (1) include tile ID in filename; (2) only save ASIC-to-ASIC network connections; in separate algorithm combine to operational network JSON --> additional script needed; therefore, remove software tile number from filename)
+- save figure of network map to Markdown file, noting broken UARTs
+- save dictionary to JSON file formatted as follows: [<tile ID>][<QC stage>]['Broken_UART'][<ASIC serial no.>][<(MOSI, MISO)>]
 
 ### 2. Leakage test
 Here we want to establish which are the channels with high leakage.
