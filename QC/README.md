@@ -11,7 +11,7 @@ Module-1 anode tile testing initiates the start of QC metric tracking. The goal 
 (TO DO: scan ASICs & map serial no. with 10x10 tile chip ID)
 This script will:
 - save figure visually noting tile serial number, 10x10 tile chip ID, and physical placement on tile to Markdown file
-- save dictionary to JSON file formatted as follows: [< tile ID >][< QC stage >]['ASIC'][< serial no., 10x10 tile chip ID >]
+- save dictionary to JSON file formatted as follows: [< tile ID >][< QC stage >]['ASIC'][< serial no., 10x10 tile chip ID, boolean true if original false if replaced >]
 
 ### 1. UART test
 This test produces a Hydra network configuration and tracks broken UARTs on ASICs. The algorithm first tests `root` chips to find eligible ASICs within a tile from which a Hydra network may originate. From eligible `root` ASICs, an ASIC network is constructed, whereby after configuring each ASIC in the network chip-by-chip loopback between ASICs determines which ASICs can be reached. If a broken UART is encountered, the Hydra network is re-routed around the broken UART connection and re-checks remaining UARTs until the largest possible network is initialized. Once a network is constructed, the two-way connection between each ASIC and its neighbor is tested. Note that ASIC UARTs absent of an ASIC neighbor are not tested given the geometrical constraints of the anode tile. To run the algorithm:
