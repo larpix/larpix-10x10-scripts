@@ -20,7 +20,7 @@ This test produces a Hydra network configuration and tracks broken UARTs on ASIC
 where `[tile_number]` is the software tile number defining connections to PACMAN UARTs. This script will:
 - produce a JSON file containing the tile Hydra network configuration in the format `tile-[software_tile_number]-autoconfig.json` (TO DO: (1) include tile ID in filename; (2) only save ASIC-to-ASIC network connections; in separate algorithm combine to operational network JSON --> additional script needed; therefore, remove software tile number from filename)
 - save figure of network map to Markdown file, noting broken UARTs
-- save dictionary to JSON file formatted as follows: [<tile ID>][<QC stage>]['Broken_UART'][<ASIC serial no.>][<(MOSI, MISO)>]
+- save dictionary to JSON file formatted as follows: [< tile ID >][< QC stage >]['Broken_UART'][< ASIC serial no. >][< (MOSI, MISO) >]
 
 ### 2. Leakage test
 Here we want to establish which are the channels with high leakage.
