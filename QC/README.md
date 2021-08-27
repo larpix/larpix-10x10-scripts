@@ -1,6 +1,6 @@
 # LArPix Anode Tile Quality Control
 
-## Procedure
+## Overview
 
 The quality control procedure noted here will produce two output files: (a) a Markdown file containing the CI-level summary metrics and plots called `QC_Tile_[tile_id_number].md` and (b) a JSON file composed of dictionaries to track tile, ASIC, channel performance at various stages of the LArPix QC process. (TO DO: The naming scheme of the JSON file is TBD.) The `[tile_id_number]` is the tile ID assigned in the `LArPix-v2 System Parts Database` spreadsheet. This tile ID can be cross checked against two ASIC serial numbers to confirm physical tile identity. 
 
