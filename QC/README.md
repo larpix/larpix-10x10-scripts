@@ -1,4 +1,4 @@
-# LArPix Anode Tile Quality control
+# LArPix Anode Tile Quality Control
 
 ## Procedure
 
