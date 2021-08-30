@@ -153,7 +153,7 @@ def main(filename,
             else:
                 high_leakage_channels[just_chip] = [this_channel]
 
-            output = '- chip key: {}\tchannel: {}\trate: {:.02f}\tleakage: {:.02f}'.format(just_chip,
+            output = '- chip key: {}\tchannel: {}\trate [Hz]: {:.02f}\tleakage: {:.02f} [e-/ms]'.format(just_chip,
                                                                                            chip_key_values[3],
                                                                                            data[channel]['rate'],
                                                                                            data[channel]['leakage'])
@@ -161,6 +161,7 @@ def main(filename,
             print(output, file=f_report)
 
     plot_summary(data, filename)
+    print("![Leakage current and rate](leakage.png)", file=f_report)
 
     if not os.path.isfile(bad_channels_file) or os.path.getsize(bad_channels_file) == 0:
         with open(bad_channels_file, 'w+') as file:
