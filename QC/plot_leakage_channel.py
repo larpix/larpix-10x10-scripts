@@ -157,9 +157,9 @@ def main(filename,
                 high_leakage_channels[just_chip] = [this_channel]
 
             output = '- chip key: {}\tchannel: {}\trate [Hz]: {:.2f}\tleakage: {:.2f} [e-/ms]'.format(just_chip,
-                                                                                           chip_key_values[3],
-                                                                                           data[channel]['rate'],
-                                                                                           data[channel]['leakage'])
+                                                                                                      chip_key_values[3],
+                                                                                                      data[channel]['rate'],
+                                                                                                      data[channel]['leakage'])
             print(output)
             print("| %s\t | %i\t | %.02f\t | %.02f |" % (just_chip,
                                                          chip_key_values[3],
