@@ -126,7 +126,10 @@ def main(filename,
     data = dict()
     high_leakage_channels = {}
 
-    f_report.write("## High leakage channels list\n")
+    print("## High leakage channels list\n", file=f_report)
+    print("| Chip key\t | Channel\t | Rate [Hz]\t | Leakage current [e-/ms] |", file=f_report)
+    print("| --------\t | -------\t | ---------\t | ----------------------- |", file=f_report)
+
     for channel in sorted(unique_channels):
         channel_mask = unique_channel_id(io_group, io_channel, chip_id, channel_id) == channel
         timestamp = good_data[channel_mask]['timestamp']
@@ -153,12 +156,15 @@ def main(filename,
             else:
                 high_leakage_channels[just_chip] = [this_channel]
 
-            output = '- chip key: {}\tchannel: {}\trate [Hz]: {:.02f}\tleakage: {:.02f} [e-/ms]'.format(just_chip,
+            output = '- chip key: {}\tchannel: {}\trate [Hz]: {:.2f}\tleakage: {:.2f} [e-/ms]'.format(just_chip,
                                                                                            chip_key_values[3],
                                                                                            data[channel]['rate'],
                                                                                            data[channel]['leakage'])
             print(output)
-            print(output, file=f_report)
+            print("| %s\t | %i\t | %.02f\t | %.02f |" % (just_chip,
+                                                         chip_key_values[3],
+                                                         data[channel]['rate'],
+                                                         data[channel]['leakage']), file=f_report)
 
     plot_summary(data, filename)
     print(f"\n![Leakage current and rate](leakage.png)", file=f_report)
