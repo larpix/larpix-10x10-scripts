@@ -65,7 +65,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
 
         print(chip_key,'triggers:',len(c.reads[-1]),'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)'.format(
             len(c.reads[-1])/runtime, len(c.reads[-1])/runtime/len(channels)))
-        
+
         c.io.double_send_packets = True
         for channel in channels:
             c[chip_key].config.channel_mask[channel] = 1
@@ -73,6 +73,12 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
         c[chip_key].config.threshold_global = 255
         c.write_configuration(chip_key, registers)
         c.write_configuration(chip_key, registers)
+
+        ok, diff = c.enforce_configuration(chip_key, timeout=0.01, n=10, n_verify=10)
+        if not ok:
+            print('config error',diff)
+        c.io.double_send_packets = False
+        c.logger.record_configs([c[chip_key]])
 
     print('END ROUGH LEAKAGE')
     return c
@@ -86,4 +92,3 @@ if __name__ == '__main__':
     parser.add_argument('--channels', default=_default_channels, type=json.loads, help='''List of channels to collect data from (json formatted)''')
     args = parser.parse_args()
     c = main(**vars(args))
-
