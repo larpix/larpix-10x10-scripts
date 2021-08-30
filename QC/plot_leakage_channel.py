@@ -161,7 +161,7 @@ def main(filename,
             print(output, file=f_report)
 
     plot_summary(data, filename)
-    print("![Leakage current and rate](leakage.png)", file=f_report)
+    print(f"\n![Leakage current and rate](leakage.png)", file=f_report)
 
     if not os.path.isfile(bad_channels_file) or os.path.getsize(bad_channels_file) == 0:
         with open(bad_channels_file, 'w+') as file:
