@@ -12,10 +12,11 @@ from statistics import mode
 _default_controller_config=None
 _default_chip_key=None
 _default_threshold=128
-_default_runtime=1
+_default_runtime=2
 _default_channels=range(64)
-_default_disabled_channels=None
+_default_disabled_list=None
 _default_leakage_cut=10.
+_default_refine=False
 
 
 
@@ -75,11 +76,15 @@ def disable_chip(c, chip_key, channels):
     c.logger.record_configs([c[chip_key]])
 
 
-    
-def save_simple_json(record):
-    now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
-    with open('bad-channels-'+now+'.json','w') as outfile: json.dump(record, outfile, indent=4)
 
+def chip_key_to_string(chip_key):
+    return str(chip_key.io_group)+'-'+str(chip_key.io_channel)+'-'+str(chip_key.chip_id)
+
+
+
+def save_simple_json(record, now):
+    with open('bad-channels-'+str(now)+'.json','w') as outfile: json.dump(record, outfile, indent=4)
+    return
     
     
 def main(controller_config=_default_controller_config,
@@ -87,20 +92,33 @@ def main(controller_config=_default_controller_config,
          threshold=_default_threshold,
          runtime=_default_runtime,
          channels=_default_channels,
-         disabled_channels=_default_disabled_channels,
-         leakage_cut=_default_leakage_cut):
+         disabled_list=_default_disabled_list,
+         leakage_cut=_default_leakage_cut,
+         refine=_default_refine):
     print('START ROUGH LEAKAGE')
 
+    disabled_channels=list()
+    if disabled_list:
+        print('applying disabled_list: ',disabled_list)
+        with open(disabled_list,'r') as f: disabled_channels = json.load(f)
+    else:
+        disabled_channels["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2                            
+        print('WARNING: no default disabled list applied')
     bad_channel_list = deepcopy(disabled_channels)
-    
-    # create controller
-    c = base.main(controller_config, logger=True)
+    n_bad_channels=0
+    for key in bad_channel_list.keys():
+        if key=="All": continue
+        for channel in bad_channel_list[key]: n_bad_channels+=1
+    print('\n\n\n===========\tStarting with ',n_bad_channels,' bad channels \t ===========\n\n\n')
+
+    now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
+    leakage_fname="leakage_%s.h5" % now
+    c = base.main(controller_config, logger=True, filename=leakage_fname)
 
     chips_to_test = c.chips.keys()
     if not chip_key is None:
         chips_to_test = [chip_key]
 
-    # test ASIC one by one
     for chip_key in chips_to_test:
 
         avg_chan_trig_rate=leakage_cut+1
@@ -108,7 +126,6 @@ def main(controller_config=_default_controller_config,
 
             enable_chip(c, chip_key, channels, threshold, bad_channel_list)        
             run(c, runtime)
-
             avg_trig_rate = len(c.reads[-1])/runtime
             avg_chan_trig_rate = len(c.reads[-1])/runtime/len(channels)
             print(chip_key,'triggers:',len(c.reads[-1]),'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)'.format(avg_trig_rate, avg_chan_trig_rate))
@@ -116,13 +133,31 @@ def main(controller_config=_default_controller_config,
                 triggered_channels = c.reads[-1].extract('channel_id')
                 mode_channel = mode(triggered_channels)
                 print('channel id ',mode_channel,' added to disabled list')
-                if chip_key not in bad_channel_list: bad_channel_list[chip_key]=[]
-                bad_channel_list[chip_key].append(mode_channel)
+                _chip_key_string_=chip_key_to_string(chip_key)
+                if _chip_key_string_ not in bad_channel_list: bad_channel_list[_chip_key_string_]=[]
+                bad_channel_list[_chip_key_string_].append(mode_channel)
+                n_bad_channels+=1
                 c.io.reset_larpix(length=24)
-            disable_chip(c, chip_key, channels)                
+            disable_chip(c, chip_key, channels)
+    now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
+    save_simple_json(bad_channel_list, now)
+    print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
+    if refine:
+        
+        leakage_fname="recursive_leakage_%s.h5" % now
+        c = base.main(controller_config, logger=True, filename=leakage_fname)
+        for chip_key in chips_to_test:
+
+            enable_chip(c, chip_key, channels, threshold, bad_channel_list)        
+            run(c, runtime)
+            avg_trig_rate = len(c.reads[-1])/runtime
+            avg_chan_trig_rate = len(c.reads[-1])/runtime/len(channels)
+            print(chip_key,'triggers:',len(c.reads[-1]),'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)'.format(avg_trig_rate, avg_chan_trig_rate))
+            if avg_chan_trig_rate>leakage_cut*2:
+                print('!!!!!!\tTEST FAIL: persistant failed channel\t!!!!!!')
+                return
     print('END ROUGH LEAKAGE')
-    save_simple_json(bad_channel_list)
     return c
 
 if __name__ == '__main__':
@@ -132,8 +167,9 @@ if __name__ == '__main__':
     parser.add_argument('--threshold', default=_default_threshold, type=int, help='''Global threshold value to set (default=%(default)s)''')
     parser.add_argument('--runtime', default=_default_runtime, type=float, help='''Duration for run (in seconds) (default=%(default)s)''')
     parser.add_argument('--channels', default=_default_channels, type=json.loads, help='''List of channels to collect data from (json formatted)''')
-    parser.add_argument('--disabled_channels', default=_default_disabled_channels, type=json.loads, help='''json-formatted dict of <chip key>:[<channels>] to disable''')
+    parser.add_argument('--disabled_list', default=_default_disabled_list, type=str, help='''json-formatted dict of <chip key>:[<channels>] to disable''')
     parser.add_argument('--leakage_cut', default=_default_leakage_cut, type=float, help='''Leakage rate cut: ASIC channel average leakage rate not be exceeded''')
+    parser.add_argument('--refine', default=_default_refine, action='store_true', help='''Run leakage rate recursively to measure leakage rate with all bad channels removed''')
     args = parser.parse_args()
     c = main(**vars(args))
 

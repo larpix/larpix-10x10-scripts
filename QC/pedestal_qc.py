@@ -20,8 +20,7 @@ from collections import defaultdict
 
 _default_controller_config=None
 _default_periodic_trigger_cycles=100000
-_default_runtime=60
-_default_disabled_channels=None
+_default_runtime=120
 _default_disabled_list=None
 _default_log_simple=False
 #_default_log_qc=False
@@ -127,6 +126,7 @@ def run_pedestal(c, runtime):
 
 
 def evaluate_pedestal(datalog_file, baseline_cut_value, apply_baseline_cut, noise_cut_value, apply_noise_cut):
+    n_bad_channels=0
     f = h5py.File(datalog_file,'r')
     data_mask=f['packets'][:]['packet_type']==0
     valid_parity_mask=f['packets'][data_mask]['valid_parity']==1
@@ -149,19 +149,22 @@ def evaluate_pedestal(datalog_file, baseline_cut_value, apply_baseline_cut, nois
         if apply_noise_cut:
             if np.std(adc)>=noise_cut_value or np.std(adc)==0: flag=True
         if flag==True:
+            n_bad_channels+=1
             _chip_key_ = from_unique_to_chip_key(unique)
             _chip_key_string_ = chip_key_string(_chip_key_)
             if _chip_key_ in record: record[_chip_key_string_]=[]
             record[_chip_key_string_].append( from_unique_to_channel_id(unique) )    
     record["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
-    return record
+    return record, n_bad_channels
 
 
 
 def save_simple_json(record):
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
-    with open('bad-channels-'+now+'.json','w') as outfile: json.dump(record, outfile, indent=4)
-
+    with open('bad-channels-'+now+'.json','w') as outfile:
+        json.dump(record, outfile, indent=4)
+        return now
+    
 
 
 def main(controller_config=_default_controller_config,
@@ -208,15 +211,16 @@ def main(controller_config=_default_controller_config,
     base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
     run_pedestal(c, runtime)
 
-    revised_disabled_channels = defaultdict(list)    
+    revised_disabled_channels = defaultdict(list)
+    revised_bad_channel_filename=None
     #if log_simple or log_qc:
     if log_simple:
-        revised_disabled_channels = evaluate_pedestal(ped_fname, baseline_cut_value, apply_baseline_cut, noise_cut_value, apply_noise_cut)
-        if log_simple: save_simple_json(revised_disabled_channels)
+        revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, baseline_cut_value, apply_baseline_cut, noise_cut_value, apply_noise_cut)
+        if log_simple: revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
+        print('\n\n\n===========\t',n_bad_channels,' n bad channels\t ===========\n\n\n')
         
     if refine:
-        now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
-        ped_fname="recursive_pedestal_%s.h5" % now
+        ped_fname="recursive_pedestal_%s.json" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
         print('Wait 3 seconds for cooling the ASICs...'); time.sleep(3)
