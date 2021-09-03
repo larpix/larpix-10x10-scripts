@@ -9,18 +9,16 @@ The quality control procedure noted here will produce two output files:
 
 (TODO: The naming scheme of the JSON file is TBD.) 
 
-The `[tile_id_number]` is the tile ID assigned in the [LArPix-v2 System Parts Database](https://docs.google.com/spreadsheets/d/1jXWcQ65Ai-FbcO17qEVV_lLO--Fv7iZ9VXFynjwSQgg/edit#gid=0) spreadsheet. This tile ID can be cross checked against two ASIC serial numbers to confirm physical tile identity. 
+The `[tile_id_number]` is the tile ID assigned in the LArPix-v2 System Parts Database spreadsheet. This tile ID can be cross checked against two ASIC serial numbers to confirm physical tile identity. 
 
 Module-1 anode tile testing initiates the start of QC metric tracking. The goal is for ASIC and tile performance to be tracked from individual ASIC testing (at Caltech), to warm and cold tile testing (at Berkeley and UTA, respectively), to module checkout (at Bern and FNAL), through LArTPC operation (at Bern, FNAL, and SingleCube sites). Evaluation of system performance at each stage is crucial to system design and robustness. Open an `issue` if a new failure mode has been identified for which the QC process should monitor.
 
 ### 0. Tile-ASIC mapping
-(TO DO: get scanning information from Leon)
-
-(TO DO: scan ASICs & map serial no. with 10x10 tile chip ID)
+(TO DO: Scan ASICs & map ASIC serial no. against tile placement per the appropriate tile layout as defined in larpix-geometry. The QR code printed to LArPix-v2a packaged ASICs is unscannable. To be determined, if the QR code is scannable on the new LArPix-v2b packaged ASIC. For the time being, we manually save to file packaged chip serial numbers for ASICs with broken UARTs and tile-identifying ASICs (chip IDs 11 and 110 as defined in larpix-geometry layout 2.3.0).)
 
 This script will:
-- save figure visually noting tile serial number, 10x10 tile chip ID, and physical placement on tile to Markdown file
-- save dictionary to JSON file formatted as follows: ```[< tile ID >][< QC stage >]['ASIC'][< serial no., 10x10 tile chip ID, boolean true if original or false if replaced >]```
+- save figure visually noting tile serial number, larpix-geometry ASIC x-y position, and larpix-geometry chip ID to Markdown file
+- save dictionary to JSON file formatted as follows: ```[< tile ID >][< QC stage >]['ASIC'][< serial no., larpix-geometry chip ID, boolean true if original or false if replaced >]```
 
 
 ### 1. UART test
@@ -43,7 +41,7 @@ Here we want to establish which are the channels with high leakage.
 To do so we run:
 
 ```bash
-./leakage_current.py \
+./leakage_qc.py \
 --controller_config tile-[tile_number]-autoconfig.json
 ```
 

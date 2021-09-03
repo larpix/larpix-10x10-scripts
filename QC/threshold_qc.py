@@ -15,7 +15,7 @@ import json
 _default_controller_config=None
 _default_pedestal_file=None
 _default_trim_sigma_file='channel_scale_factor.json'
-_default_disable_list=[]
+_default_disabled_list=None
 _default_noise_cut=3.
 _default_null_sample_time=0.5 #1 #0.25
 _default_disable_rate=20.
@@ -169,7 +169,14 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
     print('!!!!! ',count_noisy,' NOISY CHANNELS TO DISABLE !!!!!')
     return pedestal_channel, pedestal_chip, csa_disable
 
-def disable_from_file(c, disable_input, csa_disable):
+def disable_from_file(c, disabled_list, csa_disable):
+    disable_input=dict()
+    if disabled_list:
+        print('applying disabled list: ',disabled_list)
+        with open(disabled_list,'r') as f: disable_input=json.load(f)
+    else:
+        disable_input["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
+    
     chip_register_pairs = []
     for chip_key in c.chips:
         chip_register_pairs.append( (chip_key, list(range(66,74)) ) )
@@ -534,7 +541,7 @@ def save_stats(record):
 def main(controller_config=_default_controller_config,
          pedestal_file=_default_pedestal_file,
          trim_sigma_file=_default_trim_sigma_file,
-         disable_list=_default_disable_list,
+         disabled_list=_default_disabled_list,
          noise_cut=_default_noise_cut,
          null_sample_time=_default_null_sample_time,
          disable_rate=_default_disable_rate,
@@ -567,7 +574,7 @@ def main(controller_config=_default_controller_config,
     print('==> %.3f seconds --- pedestal evaluation \n\n'%timeEnd)
 
     timeStart = time.time()
-    csa_disable = disable_from_file(c, disable_list, csa_disable)
+    csa_disable = disable_from_file(c, disabled_list, csa_disable)
     timeEnd = time.time()-timeStart
     print('==> %.3f seconds --- disable channels from input list'%timeEnd)
     
@@ -653,10 +660,10 @@ if __name__ == '__main__':
                         default=_default_trim_sigma_file,
                         type=str,
                         help='''Path to channel-dependent trim DAC scaling file''')
-    parser.add_argument('--disable_list',
-                        default=_default_disable_list,
-                        type=json.loads,
-                        help='''Channels identified through pedestal runs to disable from outset''')
+    parser.add_argument('--disabled_list',
+                        default=_default_disabled_list,
+                        type=str,
+                        help='''json-formatted dict of <chip key>:[<channels>] to disable''')
     parser.add_argument('--noise_cut',
                         default=_default_noise_cut,
                         type=float,
