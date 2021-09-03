@@ -222,7 +222,7 @@ def main(controller_config=_default_controller_config,
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
         
     if no_refinement==False:
-        ped_fname="recursive_pedestal_%s.json" % revised_bad_channel_filename
+        ped_fname="recursive_pedestal_%s.h5" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
         print('Wait 3 seconds for cooling the ASICs...'); time.sleep(3)
