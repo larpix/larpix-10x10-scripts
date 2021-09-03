@@ -16,7 +16,7 @@ _default_threshold=128
 _default_runtime=2
 _default_channels=range(64)
 _default_disabled_list=None
-_default_leakage_cut=100.
+_default_leakage_cut=10.
 _default_invalid_cut=0.1
 _default_no_refinement=False
 
@@ -148,9 +148,9 @@ def main(controller_config=_default_controller_config,
     for chip_key in chips_to_test:
         time.sleep(0.5)
 
-        avg_trig_rate=leakage_cut+1
+        avg_chan_trig_rate=leakage_cut+1
         count_failed_channels=0
-        while avg_trig_rate>=leakage_cut:
+        while avg_chan_trig_rate>=leakage_cut:
 
             if count_failed_channels>49:
                 print('!!!!!!\tTEST FAIL: persistant failed channels on ASIC not disabled\t!!!!!!')
@@ -169,7 +169,7 @@ def main(controller_config=_default_controller_config,
             print(chip_key,'\ttriggers:',all_packets,'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)\t invalid packet fraction: {:0.2f}'.format(avg_trig_rate, avg_chan_trig_rate,invalid_fraction))
             channel_to_disable=[]
 
-            if avg_trig_rate>leakage_cut:
+            if avg_chan_trig_rate>leakage_cut:
                 triggered_channels = c.reads[-1].extract('channel_id')
                 mode_channel = find_multimode(triggered_channels)
                 for mc in mode_channel: channel_to_disable.append(mc); print('leakage rate exceeded. disable channel ',mc)
@@ -178,7 +178,7 @@ def main(controller_config=_default_controller_config,
             if invalid_fraction>invalid_cut:
                 mode_channel = find_multimode(invalid_packets)
                 for mc in mode_channel: invalid_channel_to_disable.append(mc)
-                if avg_trig_rate>leakage_cut:
+                if avg_chan_trig_rate>leakage_cut:
                     for ctd in invalid_channel_to_disable:
                         if ctd not in channel_to_disable:
                             channel_to_disable.append(ctd); print('invalid fraction exceeded. disable channel ',ctd)
