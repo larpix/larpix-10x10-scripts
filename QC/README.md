@@ -1,5 +1,7 @@
 # LArPix Anode Tile Quality Control
 
+## NOTE: The below is work in progress. Use the provided documentation Google slides documentation from russell@lbl.gov, for step-by-step QC guide in the interim.
+
 ## Overview
 
 The quality control procedure noted here will produce two output files: 
