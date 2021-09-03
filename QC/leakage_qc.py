@@ -165,7 +165,7 @@ def main(controller_config=_default_controller_config,
             avg_trig_rate = all_packets/runtime
             avg_chan_trig_rate = all_packets/runtime/len(channels)
             invalid_packets = c.reads[-1].extract('channel_id',valid_parity=0)
-            invalid_fraction = len(invalid_packets)/all_packets
+            invalid_fraction = len(invalid_packets)/all_packets if all_packets else 0
             print(chip_key,'\ttriggers:',all_packets,'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)\t invalid packet fraction: {:0.2f}'.format(avg_trig_rate, avg_chan_trig_rate,invalid_fraction))
             channel_to_disable=[]
 
