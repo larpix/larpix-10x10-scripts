@@ -126,7 +126,8 @@ def main(filename,
     data = dict()
     high_leakage_channels = {}
 
-    print("### High leakage channels list\n", file=f_report)
+    print(f"### High leakage channels list\n", file=f_report)
+    print(f"Channels with a leakage rate > %i Hz\n" % leakage_rate, file=f_report)
     print("| Chip key\t | Channel\t | Rate [Hz]\t | Leakage current [e-/ms] |", file=f_report)
     print("| --------\t | -------\t | ---------\t | ----------------------- |", file=f_report)
 
