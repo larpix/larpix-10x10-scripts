@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import defaultdict
+
 from tqdm import tqdm
 import h5py
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-import matplotlib.cm as cm
+from matplotlib import colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
 import yaml
+
+from utils import unique_channel_id
 
 threshold = 128
 gain = 4 # mV /ke-
@@ -22,15 +25,6 @@ geometrypath = '/home/brussell/batch2-tiles/bern/geometry/layout-2.4.0.yaml'
 with open(geometrypath) as fi:
     geo = yaml.load(fi)
 chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
-
-def unique_channel_id(io_group, io_channel, chip_id, channel_id):
-    return channel_id + 64*(chip_id + 256*(io_channel + 256*(io_group)))
-
-def unique_channel_id_2_str(unique_id):
-    return (unique_id//(256*256*64)).astype(int).astype(str) \
-        + '-' + ((unique_id//(256*64))%256).astype(int).astype(str) \
-        + '-' + ((unique_id//64)%256).astype(int).astype(str) \
-        + '-' + (unique_id%64).astype(int).astype(str)
 
 def xy_rate(data):
     for ch_id in data.keys():
@@ -54,7 +48,7 @@ def plot_summary(data_original, data_updated):
                             sharex=True,
                             num='leakage_rate',
                             figsize=(12,5),
-                            constrained_layout=True)
+                            tight_layout=True)
     x_original, y_original, rates_original = xy_rate(data_original)
     x_updated, y_updated, rates_updated = xy_rate(data_updated)
 
@@ -82,7 +76,7 @@ def plot_summary(data_original, data_updated):
     axes[0].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal', title='Original')
     axes[1].set(xlabel='x [mm]', aspect='equal', title='Updated')
 
-    fig.suptitle("Leakage rate")
+    fig.suptitle("Leakage rate",fontsize=20)
     fig.savefig("leakage.png")
 
     return fig, axes
@@ -91,30 +85,23 @@ def analyze_data(file, runtime):
     print('opening', file)
 
     with h5py.File(file,'r') as f:
-        data_mask = f['packets'][:]['packet_type'] == 0
-        data = f['packets'][data_mask]['packet_type']
-        valid_parity_mask = f['packets'][data_mask]['valid_parity'] == 1
-        good_data = (f['packets'][data_mask])[valid_parity_mask]
+        data_mask = f['packets']['packet_type'] == 0
+        print(len(f['packets'][data_mask]),' data packets')
+        data_mask = np.logical_and(f['packets']['valid_parity'], data_mask)
+        print(len(f['packets'][data_mask]),' valid parity data packets')
+        dataword = f['packets']['dataword'][data_mask]
+        unique_id = unique_channel_id(f['packets'][data_mask])
 
-    print(len(data),' data packets')
-    print(len(good_data),' valid parity data packets')
+    unique_id_set = np.unique(unique_id)
 
-    io_group = good_data['io_group'].astype(np.uint64)
-    io_channel = good_data['io_channel'].astype(np.uint64)
-    chip_id = good_data['chip_id'].astype(np.uint64)
-    channel_id = good_data['channel_id'].astype(np.uint64)
-    unique_channels = set(unique_channel_id(io_group, io_channel, chip_id, channel_id))
+    data = defaultdict(dict)
 
-    data = dict()
-
-    for channel in tqdm(sorted(unique_channels), desc="Analyzing channels..."):
-        channel_mask = unique_channel_id(io_group, io_channel, chip_id, channel_id) == channel
-        timestamp = good_data[channel_mask]['timestamp']
-        adc = good_data[channel_mask]['dataword']
+    for channel in tqdm(unique_id_set, desc="Analyzing channels..."):
+        id_mask = unique_id == channel
+        adc = dataword[id_mask]
         rate_i = len(adc) / runtime
 
         data[channel] = dict(
-            timestamp = timestamp,
             adc = adc,
             rate = rate_i / runtime,
             leakage = (rate_i)*threshold*lsb*(1000/gain)/1000 # e- / ms
@@ -127,7 +114,6 @@ def main(leakage_file,
          runtime=_default_runtime):
 
     data_original = analyze_data(leakage_file, runtime)
-
     data_updated = analyze_data(leakage_file_updated, runtime)
 
     plot_summary(data_original, data_updated)
