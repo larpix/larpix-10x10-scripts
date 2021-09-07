@@ -25,7 +25,7 @@ _default_runtime = 10
 geometrypath = '/home/brussell/batch2-tiles/bern/geometry/layout-2.4.0.yaml'
 
 with open(geometrypath) as fi:
-    geo = yaml.load(fi)
+    geo = yaml.load(fi,Loader=yaml.FullLoader)
 chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
 
 def xy_rate(data):
