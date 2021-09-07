@@ -12,7 +12,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import yaml
 
-from utils import unique_channel_id
+def unique_channel_id(channel):
+    return ((channel['io_group'].astype(int)*256 + channel['io_channel'].astype(int))*256 \
+            + channel['chip_id'].astype(int))*64 + channel['channel_id'].astype(int)
 
 threshold = 128
 gain = 4 # mV /ke-

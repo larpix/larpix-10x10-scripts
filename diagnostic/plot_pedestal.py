@@ -11,7 +11,9 @@ import yaml
 from tqdm import tqdm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from utils import unique_channel_id
+def unique_channel_id(channel):
+    return ((channel['io_group'].astype(int)*256 + channel['io_channel'].astype(int))*256 \
+            + channel['chip_id'].astype(int))*64 + channel['channel_id'].astype(int)
 
 geometrypath = '/home/brussell/batch2-tiles/bern/geometry/layout-2.4.0.yaml'
 
