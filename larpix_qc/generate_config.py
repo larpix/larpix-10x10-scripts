@@ -1,4 +1,4 @@
-import graphs
+import larpix_qc.graphs as graphs
 import json
 import argparse
 
@@ -45,7 +45,7 @@ def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_con
 				nodes.append({'chip_id' : chip, "miso_us" : na.get_map(chip, path[k+1])})
 			else:
 				nodes.append({'chip_id' : chip, "miso_us" : [None, None, None, None]})
-		
+
 		_header['network'][str(_io_group)][str(_io_channels[n])]['nodes'] = nodes
 
 
@@ -60,7 +60,7 @@ def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_con
 	jsonFile = open(_name + ".json", "w")
 	jsonFile.write(jsonString)
 	jsonFile.close()
-	
+
 
 
 

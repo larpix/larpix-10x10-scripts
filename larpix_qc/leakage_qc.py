@@ -1,7 +1,6 @@
-import larpix
 import larpix.io
 import larpix.logger
-import base
+import larpix_qc.base as base
 
 import time
 import argparse
@@ -30,7 +29,7 @@ def run(c, runtime):
     c.logger.disable()
 
 
-    
+
 def enable_chip(c, chip_key, channels, threshold, disabled_channels):
     chip_config_pairs=[]
     initial_config = deepcopy(c[chip_key].config)
@@ -61,7 +60,7 @@ def enable_chip(c, chip_key, channels, threshold, disabled_channels):
     base.flush_data(c)
     return True
 
-    
+
 def disable_chip(c, chip_key, channels):
     c.io.double_send_packets = True
     c.io.group_packes_by_io_group = True
@@ -71,7 +70,7 @@ def disable_chip(c, chip_key, channels):
     for channel in channels:
         c[chip_key].config.channel_mask[channel] = 1
         c[chip_key].config.csa_enable[channel] = 0
-    chip_config_pairs.append((chip_key,initial_config))            
+    chip_config_pairs.append((chip_key,initial_config))
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     #chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     base.flush_data(c)
@@ -107,7 +106,7 @@ def find_multimode(l):
     for a in l:
         if l.count(a) == temp: out.append(a)
     return list(set(out))
-        
+
 
 
 def main(controller_config=_default_controller_config,
@@ -126,7 +125,7 @@ def main(controller_config=_default_controller_config,
         print('applying disabled_list: ',disabled_list)
         with open(disabled_list,'r') as f: disabled_channels = json.load(f)
     else:
-        disabled_channels["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2                            
+        disabled_channels["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
         print('WARNING: no default disabled list applied')
     bad_channel_list = deepcopy(disabled_channels)
     n_bad_channels=0
@@ -160,7 +159,7 @@ def main(controller_config=_default_controller_config,
             if flag_enable==False: flag_enable=enable_chip(c, chip_key, channels, threshold, bad_channel_list)
             run(c, runtime)
             flag_disable = disable_chip(c, chip_key, channels)
-            
+
             all_packets = len(c.reads[-1])
             avg_trig_rate = all_packets/runtime
             avg_chan_trig_rate = all_packets/runtime/len(channels)
@@ -194,7 +193,7 @@ def main(controller_config=_default_controller_config,
     save_simple_json(bad_channel_list, now)
 
     if no_refinement==False:
-        
+
         leakage_fname="recursive_leakage_%s.h5" % now
         c = base.main(controller_config, logger=True, filename=leakage_fname)
         for chip_key in chips_to_test:
@@ -204,7 +203,7 @@ def main(controller_config=_default_controller_config,
             if flag_enable==False: flag_enable=enable_chip(c, chip_key, channels, threshold, bad_channel_list)
             run(c, runtime)
             flag_disable = disable_chip(c, chip_key, channels)
-            
+
             all_packets = len(c.reads[-1])
             avg_trig_rate = all_packets/runtime
             avg_chan_trig_rate = all_packets/runtime/len(channels)

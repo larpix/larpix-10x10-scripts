@@ -1,5 +1,5 @@
-import sys
-import time
+#!/usr/bin/env python3
+
 import argparse
 from copy import deepcopy
 
@@ -50,7 +50,7 @@ def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
         controller.run(runtime, 'flush_data')
         if len(controller.reads[-1])/runtime <= rate_limit:
             break
-        
+
 def main(controller_config=_default_controller_config, logger=_default_logger, reset=_default_reset, **kwargs):
 
     c = larpix.Controller()
@@ -90,7 +90,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
               '\tVDDD:',(((val_vddd>>16)>>3)*4),
               '\tIDDD:',(((val_iddd>>16)-(val_iddd>>31)*65535)*500*0.01),
               )
-        
+
     if logger:
         print('logger')
         if 'filename' in kwargs:
@@ -118,11 +118,11 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
                 c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[0], io_group=io_group)
 
     # initialize network
-    c.io.group_packets_by_io_group = False # throttle the data rate to insure no FIFO collisions  
+    c.io.group_packets_by_io_group = False # throttle the data rate to insure no FIFO collisions
     for io_group, io_channels in c.network.items():
         for io_channel in io_channels:
             c.init_network(io_group, io_channel, modify_mosi=False)
-    
+
     # set uart speed
     for io_group, io_channels in c.network.items():
         for io_channel in io_channels:
@@ -136,7 +136,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
             print('io_channel:',io_channel,'factor:',c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[_default_clk_ctrl], io_group=io_group))
 
     c.io.reset_larpix(length=24)
-            
+
     print('set configuration')
     chip_config_pairs=[]
     for chip_key, chip in reversed(c.chips.items()):
@@ -146,13 +146,13 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
         c[chip_key].config.adc_hold_delay = 15
         c[chip_key].config.enable_miso_differential = [1,1,1,1]
         chip_config_pairs.append((chip_key,initial_config))
-        
+
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     print('differential write --> complete')
     flush_data(c)
     print('data flush --> complete')
-    
+
     #c.io.double_send_packets = True
     #ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
     #if not ok:
@@ -163,7 +163,7 @@ def main(controller_config=_default_controller_config, logger=_default_logger, r
             raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
     print('configuration enforce --> complete')
-    
+
     if hasattr(c,'logger') and c.logger:
         c.logger.record_configs(list(c.chips.values()))
 
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
     parser.add_argument('--logger', default=_default_logger, action='store_true', help='''Flag to create an HDF5Logger object to track data''')
-    parser.add_argument('--no_reset', default=_default_reset, action='store_false', help='''Flag that if present, chips will NOT be reset, otherwise chips will be reset during initialization''')    
+    parser.add_argument('--no_reset', default=_default_reset, action='store_false', help='''Flag that if present, chips will NOT be reset, otherwise chips will be reset during initialization''')
     args = parser.parse_args()
     c = main(**vars(args))
 

@@ -1,5 +1,3 @@
-from numpy import argmax, argmin
-import sys
 import numpy as np
 
 #gives directional chip ids for chips on a tile
@@ -190,11 +188,11 @@ class NumberedArrangement:
 			path.append(possible_steps[best_steps_index])
 
 		return path
-		
+
 	def get_path_sub(self, existing_path=None, ind=0):
 		if existing_path is None:
 			existing_path = [[self.start_index]]
-		
+
 		#prefers right, down, left, up
 
 		direction_map = self.all_dir_maps[ind]
@@ -231,7 +229,7 @@ class NumberedArrangement:
 
 				if next_id in self.excluded_chips:
 					continue
-				
+
 				new_paths[ipath] += [next_id]
 				still_stepping[ipath] = True
 				break
@@ -284,6 +282,6 @@ class NumberedArrangement:
 
 
 
-		
+
 
 

@@ -2,14 +2,11 @@ import larpix
 import larpix.io
 import larpix.logger
 
-import base
-import sys
+import larpix_qc.base as base
 import h5py
 import argparse
 import time
 import numpy as np
-import matplotlib.pyplot as plt
-import psutil
 import json
 
 _default_controller_config=None
@@ -44,10 +41,10 @@ def measure_background_rate_increase_trim(c, extreme_edge_chip_keys, null_sample
                       ' Hz) increasinng channel ',channel,' trim DAC to 31')
                 if chip_key not in c.chips: continue
                 c[chip_key].config.pixel_trim_dac[channel] = 31
-                c.write_configuration(chip_key,[channel])                
+                c.write_configuration(chip_key,[channel])
         c.reads = []
         if count == 0: flag = False
-        
+
     return
 
 def measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable,
@@ -83,7 +80,7 @@ def measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable,
         #else:
         #    for chip in c.chips:
         #        c.write_configuration(chip_key,'channel_mask')
-        
+
     return csa_disable
 
 def unique_channel_id(io_group, io_channel, chip_id, channel_id):
@@ -104,7 +101,7 @@ def from_unique_to_chip_key(unique):
 def disable_channel(c, chip_key, channel, csa_disable):
     if chip_key not in csa_disable: csa_disable[chip_key] = []
     csa_disable[chip_key].append(channel)
-    c.write_configuration(chip_key, csa_registers[int(channel/8)])    
+    c.write_configuration(chip_key, csa_registers[int(channel/8)])
     return
 
 def disable_multiple_channels(c, csa_disable):
@@ -135,11 +132,11 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
 
         chip_key = from_unique_to_chip_key(unique)
         if chip_key not in c.chips: continue
-        
+
         if from_unique_to_channel_id(unique) in nonrouted_channels:
             continue
 
-        adc = good_data[channel_mask]['dataword']        
+        adc = good_data[channel_mask]['dataword']
         if len(adc) < 2 or np.mean(adc)>200. or np.std(adc)>noise_cut or np.mean(adc)==0:
             if verbose: print(from_unique_to_chip_key(unique),' disabling channel',from_unique_to_channel_id(unique),
                               ' with %.2f pedestal ADC RMS'%np.std(adc))
@@ -147,9 +144,9 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
             csa_disable[chip_key].append(from_unique_to_channel_id(unique))
             count_noisy += 1
             continue
-        
+
         pedestal_channel[unique] = dict(mu = np.mean(adc), std = np.std(adc))
-        
+
     temp, temp_mu, temp_std = [ {} for i in range(3)]
     for unique in pedestal_channel.keys():
         chip_key = from_unique_to_chip_key(unique)
@@ -163,7 +160,7 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
     for chip_key in temp.keys():
         pedestal_chip[chip_key] = dict( metric = np.mean(temp[chip_key]),
                                         mu = np.mean(temp_mu[chip_key]),
-                                        median = np.median(temp_mu[chip_key]), 
+                                        median = np.median(temp_mu[chip_key]),
                                         std = np.mean(temp_std[chip_key]) )
 
     print('!!!!! ',count_noisy,' NOISY CHANNELS TO DISABLE !!!!!')
@@ -176,7 +173,7 @@ def disable_from_file(c, disabled_list, csa_disable):
         with open(disabled_list,'r') as f: disable_input=json.load(f)
     else:
         disable_input["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
-    
+
     chip_register_pairs = []
     for chip_key in c.chips:
         chip_register_pairs.append( (chip_key, list(range(66,74)) ) )
@@ -194,7 +191,7 @@ def from_ADC_to_mV(c, chip_key, adc, flag, vdda):
     vref = vdda * (c[chip_key].config.vref_dac/256.)
     vcm = vdda * (c[chip_key].config.vcm_dac/256.)
     if flag==True: return adc * ( (vref - vcm) / 256. ) + vcm
-    else: return adc * ( (vref - vcm) / 256. ) 
+    else: return adc * ( (vref - vcm) / 256. )
 
 def enable_frontend(c, channels, csa_disable, ):
     chip_register_pairs = []
@@ -208,11 +205,11 @@ def enable_frontend(c, channels, csa_disable, ):
                 for channel in range(64):
                     if chip_key in csa_disable:
                         if channel in csa_disable[chip_key]:
-                            c[chip_key].config.channel_mask[channel] = 1 
-                            c[chip_key].config.csa_enable[channel] = 0 
+                            c[chip_key].config.channel_mask[channel] = 1
+                            c[chip_key].config.csa_enable[channel] = 0
                             continue
-                    c[chip_key].config.channel_mask[channel] = 0 
-                    c[chip_key].config.csa_enable[channel] = 1                        
+                    c[chip_key].config.channel_mask[channel] = 0
+                    c[chip_key].config.csa_enable[channel] = 1
 
     for pair in chip_register_pairs:
         c.multi_write_configuration([pair], connection_delay=0.001)
@@ -253,7 +250,7 @@ def enable_frontend(c, channels, csa_disable, ):
     #for chip_key in c.chips:
     #    ok,diff = c.enforce_registers([(chip_key, list(range(131, 139))+list(range(66,74)))], timeout=0.1, n=3, n_verify=3)
     #    if not ok: print('config error:', diff)
-            
+
 def find_global_dac_seed(c, pedestal_chip, normalization, cryo, vdda, verbose):
     global_dac_lsb = vdda/256.
     offset = 210 # [mV] at 300 K
@@ -267,7 +264,7 @@ def find_global_dac_seed(c, pedestal_chip, normalization, cryo, vdda, verbose):
         std_mV = from_ADC_to_mV(c, chip_key, pedestal_chip[chip_key]['std'], False, vdda)
         if verbose: print(chip_key,' pedestal: ',mu_mV,' +/- ',std_mV)
         x = (normalization * std_mV) + mu_mV
-        global_dac = int(round((x-offset)/global_dac_lsb)) 
+        global_dac = int(round((x-offset)/global_dac_lsb))
         if global_dac<0: global_dac = 0
         if global_dac>255: global_dac = 255
         if verbose: print(chip_key,'at global DAC',global_dac,'for %.1f mV predicted threshold'%x)
@@ -298,7 +295,7 @@ def find_trim_dac_seed(c, channels, cryo, vdda,
     if cryo:
         trim_scale = 2.34 # [mV] at 88 K
         offset = 465 # [mV] at 88 K
-        
+
     chip_register_pairs = []
     for i in pedestal_channel.keys():
         ped_chip_key = from_unique_to_chip_key(i)
@@ -315,7 +312,7 @@ def find_trim_dac_seed(c, channels, cryo, vdda,
         if trim_dac>31: trim_dac = 31
         c[ped_chip_key].config.pixel_trim_dac[ped_channel] = trim_dac
         chip_register_pairs.append( (ped_chip_key, [ped_channel]) )
-            
+
     c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     return
@@ -325,7 +322,7 @@ def channel_start_listen(c, chip_keys, channel, csa_disable):
     flag = False
     for chip_key in chip_keys:
         if chip_key in csa_disable:
-            if channel in csa_disable[chip_key]: continue            
+            if channel in csa_disable[chip_key]: continue
         c[chip_key].config.channel_mask[channel] = 0 # registers [131-138]
         c[chip_key].config.csa_enable[channel] = 1 # registers [66-73]
         chip_register_pairs.append( (chip_key, list(range(66,74))+list(range(131,139)) ) )
@@ -373,7 +370,7 @@ def send_testpulse(c, chip_keys, channel, n_pulses, start_dac, pulse_dac):
         c[chip_key].config.csa_testpulse_enable[channel] = 1
         chip_register_pairs.append( (chip_key, list(range(100,108))) )
     c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
-    
+
     packet.extend(read_packets)
     byte.append(read_bytestream)
     data = b''.join(byte)
@@ -435,7 +432,7 @@ def update_chip(c, status):
 
     c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     return
-    
+
 def silence_all(c, chip_keys):
     chip_register_pairs = []
     for chip_key in chip_keys:
@@ -455,7 +452,7 @@ def toggle_trim(c, channels, csa_disable, extreme_edge_chip_keys,
             if channel in csa_disable[chip_key]:
                 status[chip_key]['active'][channel] = False
                 status[chip_key]['disable'][channel] = True
-    
+
     iter_ctr = 0
     flag = True
     while flag:
@@ -512,7 +509,7 @@ def toggle_trim(c, channels, csa_disable, extreme_edge_chip_keys,
         if count == 0: flag = False
         timeEnd = time.time()-timeStart
         print('iteration ', iter_ctr,' processing time %.3f seconds\n\n'%timeEnd)
-        
+
     return csa_disable
 
 def save_config_to_file(c, chip_keys, csa_disable, verbose):
@@ -536,7 +533,7 @@ def save_config_to_file(c, chip_keys, csa_disable, verbose):
 def save_stats(record):
     time_format = time.strftime('%Y_%m_%d_%H_%S_%Z')
     with open('config-record-'+time_format+'.json', 'w') as outfile:
-        json.dump(record, outfile, indent=4)      
+        json.dump(record, outfile, indent=4)
 
 def main(controller_config=_default_controller_config,
          pedestal_file=_default_pedestal_file,
@@ -557,7 +554,7 @@ def main(controller_config=_default_controller_config,
     c = base.main(controller_config=controller_config)
     base.flush_data(c, runtime=2)
     print('START THRESHOLD\n')
-    
+
     channels = [ i for i in range(64) if i not in nonrouted_channels ]
     chip_keys = c.chips
 
@@ -567,7 +564,7 @@ def main(controller_config=_default_controller_config,
             extreme_edge_chip_ids = [chip_id for chip_id, deg in c.network[io_group][io_channel]['miso_us'].out_degree() if deg==0]
             extreme_edge_chip_keys += [larpix.Key(io_group, io_channel, chip_id) for chip_id in extreme_edge_chip_ids]
     read_extreme_edge = [(key,0) for key in extreme_edge_chip_keys]
-    
+
     timeStart = time.time()
     pedestal_channel, pedestal_chip, csa_disable = find_pedestal(pedestal_file, noise_cut, c, verbose)
     timeEnd = time.time()-timeStart
@@ -577,34 +574,34 @@ def main(controller_config=_default_controller_config,
     csa_disable = disable_from_file(c, disabled_list, csa_disable)
     timeEnd = time.time()-timeStart
     print('==> %.3f seconds --- disable channels from input list'%timeEnd)
-    
+
     timeStart = time.time()
     find_global_dac_seed(c, pedestal_chip, normalization, cryo, vdda, verbose)
     timeEnd = time.time()-timeStart
-    print('==> %.3f seconds --- set global DAC seed \n\n'%timeEnd)    
+    print('==> %.3f seconds --- set global DAC seed \n\n'%timeEnd)
 
     timeStart = time.time()
     enable_frontend(c, channels, csa_disable)
     timeEnd  = time.time()-timeStart
     print('==> %.3f seconds --- enable frontend \n\n'%timeEnd)
-    
+
     timeStart = time.time()
     dr = disable_rate*50
     csa_disable = measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable, null_sample_time, dr, verbose)
     timeEnd = time.time() - timeStart
-    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)    
+    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)
 
     timeStart = time.time()
     dr = disable_rate*5
     csa_disable = measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable, null_sample_time, dr, verbose)
     timeEnd = time.time() - timeStart
-    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)    
+    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)
 
     timeStart = time.time()
     dr = disable_rate*0.5
     csa_disable = measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable, null_sample_time, dr, verbose)
     timeEnd = time.time() - timeStart
-    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)    
+    print('==> %.3f seconds --- measured background rate with seeded global DAC & trim DAC maxed out\n --> silence channels that exceed rate\n\n'%timeEnd)
 
     ###timeStart = time.time()
     ###trim_sigma = load_trim_sigma(trim_sigma_file)
@@ -614,7 +611,7 @@ def main(controller_config=_default_controller_config,
     ###timeStart = time.time()
     ###find_trim_dac_seed(c, channels, cryo, vdda, pedestal_channel, pedestal_chip, trim_sigma)
     ###timeEnd = time.time() - timeStart
-    ###print('==> %.3f seconds --- set trim DAC seed \n\n'%timeEnd)    
+    ###print('==> %.3f seconds --- set trim DAC seed \n\n'%timeEnd)
 
     ###timeStart = time.time()
     ###measure_background_rate_increase_trim(c, extreme_edge_chip_keys, null_sample_time, disable_rate, verbose)
@@ -630,22 +627,22 @@ def main(controller_config=_default_controller_config,
     ###measure_background_rate_increase_trim(c, extreme_edge_chip_keys, null_sample_time, disable_rate, verbose)
     ###timeEnd = time.time() - timeStart
     ###print('==> %.3f seconds --- measured background rate with seeded global & trim DACs\n --> trim DAC maxed out for channels that exceed rate\n\n'%timeEnd)
-    
+
     timeStart = time.time()
     toggle_trim(c, channels, csa_disable, extreme_edge_chip_keys,
                 null_sample_time, set_rate, verbose)
     timeEnd = time.time() - timeStart
     print('==> %.3f seconds --- toggle trim DACs'%timeEnd)
-    
+
     timeStart = time.time()
     save_config_to_file(c, chip_keys, csa_disable, verbose)
     timeEnd = time.time()-timeStart
-    print('==> %.3f seconds --- saving to json config file \n'%timeEnd)        
-    
+    print('==> %.3f seconds --- saving to json config file \n'%timeEnd)
+
     time10 = time.time()-time_initial
     print('END THRESHOLD ==> %.3f seconds total run time'%time10)
     return c
-    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--controller_config',

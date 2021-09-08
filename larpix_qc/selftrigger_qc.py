@@ -5,19 +5,17 @@ Usage:
   python3 -i selftrigger_qc.py --config_name <config file/dir> --controller_config <controller config file>
 
 '''
-import larpix
 import larpix.io
 import larpix.logger
 import larpix.format.rawhdf5format as rhdf5
 import larpix.format.pacman_msg_format as pacman_msg_fmt
 
-import base
-import enforce_loaded_config
+import larpix_qc.base as base
+import larpix_qc.enforce_loaded_config as enforce_loaded_config
 
 import os
 import argparse
 import json
-from collections import defaultdict
 import time
 
 _default_config_name=None
@@ -40,7 +38,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         else: c = enforce_loaded_config.main(config_name, controller_config, logger=False, disabled_channels=disabled_channels)
 
     print(time.time()-startTime,' seconds to load & enforce configuration')
-            
+
     trigger_forward_enable=False
     if trigger_forward_enable:
         external_trigger_channel = 6

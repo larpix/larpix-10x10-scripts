@@ -6,17 +6,15 @@ Usage:
 
 '''
 
-import sys
 import os
 import glob
 import argparse
 from copy import deepcopy
 
-import larpix
 import larpix.io
 import larpix.logger
 
-import base
+import larpix_qc.base as base
 
 _default_config_name='configs/'
 _default_controller_config=None
@@ -28,13 +26,13 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     print('START LOAD CONFIG')
 
     replica_dict = dict()
-    
+
     # create controller
     c = base.main(controller_config, *args, **kwargs)
 
     c.io.group_packets_by_io_group = True
     c.io.double_send_packets = True
-    
+
     #chip_register_pairs = []
     #possible_chip_ids = range(11,111)
     #for chip_id in possible_chip_ids:
@@ -88,7 +86,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     base.flush_data(c)
-            
+
     # enforce all config registers
     print('enforcing correct configuration...')
     ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
@@ -103,7 +101,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     #        sys.exit('Failed to configure all registers \t EXITING')
     #print('LOADED CONFIGURATIONS')
 
-            
+
     # enable frontend
     chip_register_pairs = []
     for chip_key, chip in reversed(c.chips.items()):
@@ -112,7 +110,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         #c[chip_key].config.csa_enable[35]=0
         #c[chip_key].config.csa_enable[36]=0
         #c[chip_key].config.csa_enable[37]=0
-        
+
         # disable select channels
         if disabled_channels is not None:
             if 'All' in disabled_channels:
@@ -130,7 +128,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     c.multi_write_configuration(chip_register_pairs)
     c.multi_write_configuration(chip_register_pairs)
     base.flush_data(c)
-            
+
     # enforce csa enable registers
     print('enforcing configuration...')
     for chip_key, chip in reversed(c.chips.items()):
@@ -142,7 +140,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             #sys.exit('Failed to configure CSA\t EXITING')
     print('ENABLED FRONTEND')
 
-            
+
     # channel mask
     chip_register_pairs = []
     for chip_key, chip in reversed(c.chips.items()):
@@ -151,7 +149,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         #c[chip_key].config.channel_mask[35]=1
         #c[chip_key].config.channel_mask[36]=1
         #c[chip_key].config.channel_mask[37]=1
-        
+
         # disable select channels
         if disabled_channels is not None:
             if 'All' in disabled_channels:
@@ -168,7 +166,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     c.multi_write_configuration(chip_register_pairs)
     c.multi_write_configuration(chip_register_pairs)
     base.flush_data(c)
-            
+
     # enforce channel mask registers
     #print('enforcing configuration...')
     #for chip_key, chip in reversed(c.chips.items()):
@@ -179,7 +177,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     #        #sys.exit('Failed to configure channel masks\t EXITING')
     print('APPLIED CHANNEL MASKS')
 
-            
+
     c.io.double_send_packets = False
 
     if hasattr(c,'logger') and c.logger:

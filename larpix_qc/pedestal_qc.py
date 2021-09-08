@@ -8,7 +8,7 @@ Usage:
 import larpix
 import larpix.io
 import larpix.logger
-import base
+import larpix_qc.base as base
 
 import argparse
 import json
@@ -51,12 +51,12 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
                 for disabled_channel in disabled_channels[disabled_key]:
                     chip.config.csa_enable[disabled_channel] = 0
         chip_config_pairs.append((chip_key,initial_config))
-        
+
     print('writing triggers and resets configuration')
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     base.flush_data(c)
-        
+
     print('enforcing correct configuration...')
     ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
     if not ok:
@@ -79,16 +79,16 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     c.multi_write_configuration(chip_register_pairs)
     c.multi_write_configuration(chip_register_pairs)
     base.flush_data(c)
-        
+
     print('enforcing correct configuration...')
     ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
     if not ok:
-        raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))    
+        raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.group_packets_by_io_group = False
     c.io.double_send_packets = False
 
 
-    
+
 def unique_channel_id(io_group, io_channel, chip_id, channel_id): return channel_id + 100*(chip_id + 1000*(io_channel + 1000*(io_group)))
 
 
@@ -113,14 +113,14 @@ def chip_key_string(chip_key):
     return '-'.join([str(int(chip_key.io_group)),str(int(chip_key.io_channel)),str(int(chip_key.chip_id))])
 
 
-    
+
 def run_pedestal(c, runtime):
     print('START PEDESTAL RUN')
     c.logger.enable()
     c.run(runtime, 'collect data')
     c.logger.flush()
     print('packets read',len(c.reads[-1]))
-    c.logger.disable()    
+    c.logger.disable()
     print('END PEDESTAL RUN')
 
 
@@ -153,7 +153,7 @@ def evaluate_pedestal(datalog_file, baseline_cut_value, no_apply_baseline_cut, n
             _chip_key_ = from_unique_to_chip_key(unique)
             _chip_key_string_ = chip_key_string(_chip_key_)
             if _chip_key_ in record: record[_chip_key_string_]=[]
-            record[_chip_key_string_].append( from_unique_to_channel_id(unique) )    
+            record[_chip_key_string_].append( from_unique_to_channel_id(unique) )
     record["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
     return record, n_bad_channels
 
@@ -164,7 +164,7 @@ def save_simple_json(record):
     with open('pedestal-bad-channels-'+now+'.json','w') as outfile:
         json.dump(record, outfile, indent=4)
         return now
-    
+
 
 
 def main(controller_config=_default_controller_config,
@@ -220,18 +220,18 @@ def main(controller_config=_default_controller_config,
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, apply_noise_cut)
         revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
-        
+
     if no_refinement==False:
         ped_fname="recursive_pedestal_%s.h5" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
         print('Wait 3 seconds for cooling the ASICs...'); time.sleep(3)
         base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
-        run_pedestal(c, runtime)    
+        run_pedestal(c, runtime)
 
     print('Soft reset issued')
     c.io.reset_larpix(length=24)
-        
+
     return c
 
 

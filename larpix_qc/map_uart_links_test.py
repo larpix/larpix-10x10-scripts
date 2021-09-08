@@ -1,11 +1,11 @@
-import sys
-import time
+import os
+
 import argparse
-import graphs
+import larpix_qc.graphs as graphs
+import larpix_qc.generate_config as generate_config
 import larpix
 import larpix.io
 import larpix.logger
-import generate_config
 
 _uart_phase = 0
 
@@ -208,7 +208,7 @@ def init_initial_network(c, io_group, io_channels, paths):
 				c.write_configuration(prev_key, 'enable_miso_downstream')
 				c.write_configuration(prev_key, 'enable_miso_differential')
 				ordered_chips_by_channel[ipath].append(prev_key.chip_id)
-			
+
 			c[prev_key].config.enable_miso_upstream = arr.get_uart_enable_list(prev_key.chip_id, next_key.chip_id)
 			c.write_configuration(prev_key, 'enable_miso_upstream')
 
@@ -224,7 +224,7 @@ def init_initial_network(c, io_group, io_channels, paths):
 			c[next_key].config.enable_miso_differential =[1,1,1,1]
 			c.write_configuration(next_key, 'enable_miso_downstream')
 			ordered_chips_by_channel[ipath].append(next_key.chip_id)
-			
+
 		for chip_ids in ordered_chips_by_channel[ipath][::-1]:
 			key = larpix.key.Key(io_group, io_channels[ipath], chip_ids)
 			c[key].config.enable_miso_downstream=[0]*4
@@ -246,7 +246,7 @@ def test_network(c, io_group, io_channels, paths):
 		step += 1
 
 		for ipath, path in enumerate(paths):
-			
+
 			if not still_stepping[ipath] or not valid[ipath]:
 				continue
 
@@ -295,12 +295,12 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 	#-loop over directions
 	#-check if chip in that direction is in current network
 	#---if in network:
-	# 	shut off all current misos through existing network, 
+	# 	shut off all current misos through existing network,
 	#   re-route through current chip using upstrean command from current chip
 	#   read configuration through current chip
 	# ** if we can't read the command, then either the upstream from current chip isn't working, or the
 	# ** mosi on the current chip isn't working, or the downstream miso on next/current mosi bridge isnt working
-	# 
+	#
 	# to test:
 	# - upstream on current or downstream on next:
 	#----change register through current configuration
@@ -316,10 +316,10 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 	#       -enable downstream miso from next to current
 	#    	-disbale miso us from current (for good measure, we know it doesnt work)
 	#		-read register from chip
-	
+
 	chip = path[ich]
 	#check if last chip in path
-	
+
 	mover_directions = [arr.right, arr.left, arr.up, arr.down]
 
 	for direction in mover_directions:
@@ -383,13 +383,13 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			prev_us_backup = c[prev_key].config.enable_miso_upstream.copy()
 			c[prev_key].config.enable_miso_upstream = [0,0,0,0]
 			c.write_configuration(prev_key, 'enable_miso_upstream')
-			
+
 		#at this point the next chip is completely cut off. Now we talk to it through our current chip
 		curr_us_backup = c[curr_key].config.enable_miso_upstream.copy()
 		c[curr_key].config.enable_miso_upstream = arr.get_uart_enable_list(chip, next_chip)
 		c.write_configuration(curr_key, 'enable_miso_upstream')
 
-		
+
 		#if real io > 0, next key is not in network, so we need to make new key in network
 		new_next_key = next_key
 		if real_io_channel > 0:
@@ -397,7 +397,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 
 		c[new_next_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
 		c.write_configuration(new_next_key, 'enable_miso_downstream')
-		
+
 		#check if we can communicate with it
 		ok, diff = c.verify_registers([(new_next_key, 122)]) #just reading chip id
 		if True:
@@ -467,7 +467,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 
 						continue
 	return True
-	
+
 
 
 def main(tile_number, generate_configuration):
@@ -546,6 +546,18 @@ def main(tile_number, generate_configuration):
 	return
 
 if __name__ == '__main__':
+
+	if not os.path.exists("io/pacman.json"):
+		if not os.path.exists("io"):
+			os.makedirs("io")
+		pacman_address = input("io/pacman.json not found. Enter pacman address (e.g. pacman.local): ")
+		print("""{
+    "_config_type": "io",
+    "io_class": "PACMAN_IO",
+    "io_group": [
+        [1, "%s"]
+    ]
+}""" % pacman_address, file=open("io/pacman.json", "w"))
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--tile_number', default=1, type=int, help='''Tile number being tested''')
 	parser.add_argument('--generate_configuration', default=True, type=bool, help='''Flag to write configuration file with name tile-(tile number).json''')
