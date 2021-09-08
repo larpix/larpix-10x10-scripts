@@ -110,13 +110,12 @@ def plot_summary(data_original, data_updated):
     cax11 = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(sc1_stds, cax=cax11, label='Standard deviation ADC')
 
-    axes[0][0].set(ylabel='y [mm]', aspect='equal', title='Original')
+    axes[0][0].set(ylabel='y [mm]', aspect='equal')
     axes[1][0].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal')
-    axes[0][1].set(ylabel='y [mm]', aspect='equal', title='Updated')
+    axes[0][1].set(ylabel='y [mm]', aspect='equal')
     axes[1][1].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal')
 
     fig.suptitle("Pedestal",fontsize=20)
-    fig.savefig("pedestal.png")
 
     return fig, axes
 
@@ -126,7 +125,10 @@ def main(pedestal_file, pedestal_file_updated):
     data_original = analyze_data(pedestal_file)
     data_updated = analyze_data(pedestal_file_updated)
 
-    plot_summary(data_original, data_updated)
+    fig, axes = plot_summary(data_original, data_updated)
+    axes[0][0].set_title('Original\n%s' % pedestal_file, fontsize='small')
+    axes[0][1].set_title('Updated\n%s' % pedestal_file_updated, fontsize='small')
+    fig.savefig("pedestal.png")
 
     return True
 

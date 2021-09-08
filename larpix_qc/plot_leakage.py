@@ -75,11 +75,10 @@ def plot_summary(data_original, data_updated):
     fig.colorbar(sc0, cax=cax0, label='Rate [Hz]')
     fig.colorbar(sc1, cax=cax1, label='Rate [Hz]')
 
-    axes[0].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal', title='Original')
-    axes[1].set(xlabel='x [mm]', aspect='equal', title='Updated')
+    axes[0].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal')
+    axes[1].set(xlabel='x [mm]', aspect='equal')
 
     fig.suptitle("Leakage rate",fontsize=20)
-    fig.savefig("leakage.png")
 
     return fig, axes
 
@@ -118,7 +117,10 @@ def main(leakage_file,
     data_original = analyze_data(leakage_file, runtime)
     data_updated = analyze_data(leakage_file_updated, runtime)
 
-    plot_summary(data_original, data_updated)
+    fig, axes = plot_summary(data_original, data_updated)
+    axes[0].set_title('Original\n%s' % leakage_file, fontsize='small')
+    axes[1].set_title('Updated\n%s' % leakage_file_updated, fontsize='small')
+    fig.savefig("leakage.png")
 
     return True
 
