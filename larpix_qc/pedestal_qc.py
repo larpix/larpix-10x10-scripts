@@ -9,7 +9,7 @@ For usage:
 import larpix
 import larpix.io
 import larpix.logger
-import larpix_qc.base as base
+from larpix_qc import base
 
 import argparse
 import json
