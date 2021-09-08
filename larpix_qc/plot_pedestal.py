@@ -96,19 +96,19 @@ def plot_summary(data_original, data_updated):
 
     divider = make_axes_locatable(axes[0][0])
     cax00 = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sc_means, cax=cax00, label='Mean')
+    fig.colorbar(sc_means, cax=cax00, label='Mean ADC')
 
     divider = make_axes_locatable(axes[1][0])
     cax10 = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sc_stds, cax=cax10, label='Standard deviation')
+    fig.colorbar(sc_stds, cax=cax10, label='Standard deviation ADC')
 
     divider = make_axes_locatable(axes[0][1])
     cax01 = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sc1_means, cax=cax01, label='Mean')
+    fig.colorbar(sc1_means, cax=cax01, label='Mean ADC')
 
     divider = make_axes_locatable(axes[1][1])
     cax11 = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(sc1_stds, cax=cax11, label='Standard deviation')
+    fig.colorbar(sc1_stds, cax=cax11, label='Standard deviation ADC')
 
     axes[0][0].set(ylabel='y [mm]', aspect='equal', title='Original')
     axes[1][0].set(xlabel='x [mm]', ylabel='y [mm]', aspect='equal')
