@@ -13,7 +13,7 @@ setuptools.setup(
     url="https://github.com/larpix/larpix-10x10-scripts",
     packages=['larpix_qc'],
     package_dir={'larpix_qc': 'larpix_qc'},
-    install_requires=["numpy", "pyyaml", "matplotlib", "h5py", "tqdm"],
+    install_requires=["numpy", "pyyaml", "matplotlib", "h5py", "tqdm", "larpix-control"],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: by End-User Class :: Developers",
@@ -21,7 +21,8 @@ setuptools.setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Physics"
     ],
-    scripts=['larpix_qc/pedestal_qc.py','larpix_qc/leakage_qc.py','larpix_qc/selftrigger_qc.py','larpix_qc/threshold_qc.py','larpix_qc/map_uart_links_test.py',
+    scripts=['larpix_qc/pedestal_qc.py','larpix_qc/leakage_qc.py','larpix_qc/selftrigger_qc.py',
+             'larpix_qc/threshold_qc.py','larpix_qc/map_uart_links_test.py',
              'larpix_qc/plot_leakage.py', 'larpix_qc/plot_pedestal.py', 'larpix_qc/base.py'],
     python_requires='>=3.6',
 )
