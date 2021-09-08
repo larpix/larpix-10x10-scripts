@@ -1,8 +1,8 @@
 import os
 
 import argparse
-import larpix_qc.graphs as graphs
-import larpix_qc.generate_config as generate_config
+from larpix_qc import graphs
+from larpix_qc import generate_config
 import larpix
 import larpix.io
 import larpix.logger

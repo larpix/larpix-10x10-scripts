@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 '''
 Loads specified configuration file and collects data until killed (cleanly exits)
 
-Usage:
-  python3 -i pedestal_raw.py --controller_config <controller config file>
+For usage:
+  pedestal_qc.py --help
 
 '''
 import larpix

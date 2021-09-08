@@ -1,30 +1,27 @@
+#!/usr/bin/env python3
 '''
 Loads specified configuration file and collects data until killed (cleanly exits)
 
-Usage:
-  python3 -i selftrigger_qc.py --config_name <config file/dir> --controller_config <controller config file>
+For usage:
+  selftrigger_qc.py --help
 
 '''
-import larpix.io
-import larpix.logger
-import larpix.format.rawhdf5format as rhdf5
-import larpix.format.pacman_msg_format as pacman_msg_fmt
-
-import larpix_qc.base as base
-import larpix_qc.enforce_loaded_config as enforce_loaded_config
-
 import os
 import argparse
 import json
 import time
+
+import larpix.format.rawhdf5format as rhdf5
+import larpix.format.pacman_msg_format as pacman_msg_fmt
+
+from larpix_qc import base
+from larpix_qc import enforce_loaded_config
 
 _default_config_name=None
 _default_controller_config=None
 _default_runtime=10*60 # 10-min run files
 _default_outdir='./'
 _default_disabled_channels=None
-
-
 
 def main(config_name=_default_config_name, controller_config=_default_controller_config, runtime=_default_runtime, outdir=_default_outdir, disabled_channels=_default_disabled_channels):
     print('START RUN')

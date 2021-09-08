@@ -52,7 +52,7 @@ def enable_chip(c, chip_key, channels, threshold, disabled_channels):
     c.io.double_send_packets = False
     c.io.group_packes_by_io_group = False
     if not ok:
-        print('config error',diff)
+        print('config error', list(diff.keys()))
         c.io.reset_larpix(length=24)
         print('brief sleep after after soft reset to clear FIFOs [ENABLE CHIP]')
         time.sleep(3)
@@ -80,7 +80,7 @@ def disable_chip(c, chip_key, channels):
     c.io.double_send_packets = False
     c.io.group_packes_by_io_group = False
     if not ok:
-        print('config error',diff)
+        print('config error',list(diff.keys()))
         c.io.reset_larpix(length=24)
         print('brief sleep after after soft reset to clear FIFOs [DISABLE CHIP]')
         time.sleep(3)
@@ -145,7 +145,6 @@ def main(controller_config=_default_controller_config,
         chips_to_test = [chip_key]
     time.sleep(2)
 
-    invalid_channel_to_disable = [] # THIS WASN'T DEFINED BEFORE, SO I ADDED IT HERE, MAYBE IT'S WRONG PLACE?
     for chip_key in chips_to_test:
         time.sleep(0.5)
 
@@ -154,13 +153,20 @@ def main(controller_config=_default_controller_config,
         while avg_chan_trig_rate>=leakage_cut:
 
             if count_failed_channels>49:
-                print('!!!!!!\tTEST FAIL: persistant failed channels on ASIC not disabled\t!!!!!!')
+                print('!!!!!!\tTEST FAIL: persistent failed channels on ASIC not disabled\t!!!!!!')
                 return
 
             flag_enable = enable_chip(c, chip_key, channels, threshold, bad_channel_list)
             if flag_enable==False: flag_enable=enable_chip(c, chip_key, channels, threshold, bad_channel_list)
             run(c, runtime)
-            flag_disable = disable_chip(c, chip_key, channels)
+            attempts = 0
+            flag_disable = False
+            while not flag_disable and attempts < 5:
+                flag_disable = disable_chip(c, chip_key, channels)
+                attempts += 1
+            if not flag_disable:
+                print('!!!!!!\tTEST FAIL: persistent configuration error in chip %s\t!!!!!!' % chip_key)
+                return
 
             all_packets = len(c.reads[-1])
             avg_trig_rate = all_packets/runtime
@@ -169,6 +175,7 @@ def main(controller_config=_default_controller_config,
             invalid_fraction = len(invalid_packets)/all_packets if all_packets else 0
             print(chip_key,'\ttriggers:',all_packets,'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)\t invalid packet fraction: {:0.2f}'.format(avg_trig_rate, avg_chan_trig_rate,invalid_fraction))
             channel_to_disable=[]
+            invalid_channel_to_disable = [] # THIS WASN'T DEFINED BEFORE, SO I ADDED IT HERE, MAYBE IT'S WRONG PLACE?
 
             if avg_chan_trig_rate>leakage_cut:
                 triggered_channels = c.reads[-1].extract('channel_id')
@@ -205,12 +212,14 @@ def main(controller_config=_default_controller_config,
             if flag_enable==False: flag_enable=enable_chip(c, chip_key, channels, threshold, bad_channel_list)
             run(c, runtime)
             flag_disable = disable_chip(c, chip_key, channels)
+            if not flag_disable:
+                flag_disable = disable_chip(c, chip_key, channels)
 
             all_packets = len(c.reads[-1])
             avg_trig_rate = all_packets/runtime
             avg_chan_trig_rate = all_packets/runtime/len(channels)
             invalid_packets = len(c.reads[-1].extract('channel_id',valid_parity=0))
-            invalid_fraction = invalid_packets/all_packets
+            invalid_fraction = invalid_packets/all_packets if all_packets else 0
             print(chip_key,'\ttriggers:',all_packets,'\trate: {:0.2f}Hz (per channel: {:0.2f}Hz)\t invalid packet fraction: {:0.2f}'.format(avg_trig_rate, avg_chan_trig_rate,invalid_fraction))
             if avg_trig_rate>leakage_cut*1.5 or invalid_fraction>invalid_cut*1.2:
                 print('!!!!!!\tTEST FAIL: persistant failed channel\t!!!!!!')

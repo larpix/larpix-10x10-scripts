@@ -11,10 +11,7 @@ import glob
 import argparse
 from copy import deepcopy
 
-import larpix.io
-import larpix.logger
-
-import larpix_qc.base as base
+from larpix_qc import base
 
 _default_config_name='configs/'
 _default_controller_config=None
