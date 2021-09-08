@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import larpix
 import larpix.io
 import larpix.logger
