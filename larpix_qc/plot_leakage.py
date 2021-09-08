@@ -20,7 +20,7 @@ threshold = 128
 gain = 4 # mV /ke-
 lsb = 3.91
 
-_default_runtime = 10
+_default_runtime = 2
 
 geometrypath = '/home/brussell/batch2-tiles/bern/geometry/layout-2.4.0.yaml'
 

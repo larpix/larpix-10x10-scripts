@@ -1,5 +1,6 @@
-import larpix.io
-import larpix.logger
+
+#!/usr/bin/env python3
+
 import larpix_qc.base as base
 
 import time
@@ -144,6 +145,7 @@ def main(controller_config=_default_controller_config,
         chips_to_test = [chip_key]
     time.sleep(2)
 
+    invalid_channel_to_disable = [] # THIS WASN'T DEFINED BEFORE, SO I ADDED IT HERE, MAYBE IT'S WRONG PLACE?
     for chip_key in chips_to_test:
         time.sleep(0.5)
 
