@@ -660,7 +660,7 @@ if __name__ == '__main__':
     parser.add_argument('--disabled_list',
                         default=_default_disabled_list,
                         type=str,
-                        help='''json-formatted dict of <chip key>:[<channels>] to disable''')
+                        help='''File containing json-formatted dict of <chip key>:[<channels>] to disable''')
     parser.add_argument('--noise_cut',
                         default=_default_noise_cut,
                         type=float,

@@ -242,7 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''REQUIRED --- Hydra network configuration file''')
     parser.add_argument('--periodic_trigger_cycles', default=_default_periodic_trigger_cycles, type=int, help='''Periodic trigger rate in LArPix clcock cycles''')
     parser.add_argument('--runtime', default=_default_runtime, type=float, help='''Pedestal runtime duration''')
-    parser.add_argument('--disabled_list', default=_default_disabled_list, type=str, help='''JSON-formatted dict of <chip key>:[<channels>] you'd like disabled''')
+    parser.add_argument('--disabled_list', default=_default_disabled_list, type=str, help='''File containing JSON-formatted dict of <chip key>:[<channels>] you'd like disabled''')
     parser.add_argument('--no_log_simple', default=_default_no_log_simple, action='store_true', help='''Disable log bad channels to simple JSON, dict of <chip key>:['channels']''')
     #parser.add_argument('--log_qc', default=_default_log_qc, action='store_true', help='''Log bad channels to LArPix QC JSON''')
     parser.add_argument('--baseline_cut_value', default=_default_baseline_cut_value, type=float, help='''Pedestal mean cut value: channels with pedestal mean at or exceeding this value are added to disabled list''')

@@ -21,9 +21,9 @@ _default_config_name=None
 _default_controller_config=None
 _default_runtime=10*60 # 10-min run files
 _default_outdir='./'
-_default_disabled_channels=None
+_default_disabled_list=None
 
-def main(config_name=_default_config_name, controller_config=_default_controller_config, runtime=_default_runtime, outdir=_default_outdir, disabled_channels=_default_disabled_channels):
+def main(config_name=_default_config_name, controller_config=_default_controller_config, runtime=_default_runtime, outdir=_default_outdir, disabled_list=_default_disabled_list):
     print('START RUN')
     startTime = time.time()
 
@@ -31,6 +31,15 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     if config_name is None:
         c = base.main(controller_config)
     else:
+
+        if disabled_list:
+            print('applying disabled_list: ',disabled_list)
+            with open(disabled_list,'r') as f: disabled_channels = json.load(f)
+        else:
+            disabled_channels = {}
+            disabled_channels["All"]=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
+            print('WARNING: no default disabled list applied')
+
         if controller_config is None: c = enforce_loaded_config.main(config_name, logger=False, disabled_channels=disabled_channels)
         else: c = enforce_loaded_config.main(config_name, controller_config, logger=False, disabled_channels=disabled_channels)
 
@@ -85,6 +94,6 @@ if __name__ == '__main__':
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
     parser.add_argument('--outdir', default=_default_outdir, type=str, help='''Directory to send data files to''')
     parser.add_argument('--runtime', default=_default_runtime, type=float, help='''Time duration before flushing remaining data to disk and initiating a new run (in seconds) (default=%(default)s)''')
-    parser.add_argument('--disabled_channels', default=_default_disabled_channels, type=json.loads, help='''json-formatted dict of <chip key>:[<channels>] you'd like disabled''')
+    parser.add_argument('--disabled_list', default=_default_disabled_list, type=str, help='''File containing json-formatted dict of <chip key>:[<channels>] you'd like disabled''')
     args = parser.parse_args()
     c = main(**vars(args))
