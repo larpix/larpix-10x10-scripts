@@ -96,7 +96,10 @@ def update_log_qc(log_qc_file, tile_id, all_channels):
         with open(log_qc_file,'r') as log_qc:
             existing_log = json.load(log_qc)
 
-        existing_chips = existing_log['%i'%tile_id]['Warm tile']['Leakage rate']
+        if 'Leakage rate' not in existing_log[str(tile_id)]['Warm tile']:
+            existing_log[str(tile_id)]['Warm tile']['Leakage rate'] = {}
+
+        existing_chips = existing_log[str(tile_id)]['Warm tile']['Leakage rate']
         for chip in all_channels:
             if chip in existing_chips:
                 for channel in all_channels[chip]:
