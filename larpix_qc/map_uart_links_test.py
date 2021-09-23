@@ -60,7 +60,7 @@ def get_temp_key(io_group, io_channel):
 	return larpix.key.Key(io_group, io_channel, 1)
 
 def get_good_roots(c, io_group, io_channels):
-	root_chips = [11, 41, 101]
+	root_chips = [11, 41, 71, 101]
 
 	good_tile_channel_indices = []
 	for n, io_channel in enumerate(io_channels):
@@ -111,7 +111,7 @@ def get_good_roots(c, io_group, io_channels):
 		###############################################################################
 
 		#checking
-		ok,diff = c.verify_registers([(key,122)], timeout=0.5, n=10)
+		ok,diff = c.verify_registers([(key,122)], timeout=0.5, n=3)
 
 		if ok:
 			good_tile_channel_indices.append(n)
@@ -298,7 +298,7 @@ def test_network(c, io_group, io_channels, paths):
 				print(next_key, 'already verified')
 				continue
 
-			ok, diff = c.verify_registers([(next_key, 122)], timeout=0.5, n=10)
+			ok, diff = c.verify_registers([(next_key, 122)], timeout=0.5, n=3)
 			print(next_key, ok )
 
 			if ok:
@@ -422,7 +422,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		c.write_configuration(new_next_key, 'enable_miso_downstream')
 		
 		#check if we can communicate with it
-		ok, diff = c.verify_registers([(new_next_key, 122)], timeout=0.5, n=10) #just reading chip id
+		ok, diff = c.verify_registers([(new_next_key, 122)], timeout=0.5, n=3) #just reading chip id
 		if True:
 			if ok:
 				print('successfully tested uart', chip, next_chip)
@@ -444,9 +444,9 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 				c.write_configuration(next_key, 'enable_miso_downstream')
 
 				#test configs
-				ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=10)
+				ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=3)
 				if real_io_channel < 0:
-					ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=10)
+					ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=3)
 					ok = (ok and ok2)
 
 				if ok:
@@ -462,9 +462,9 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 					c[next_key].config.enable_miso_downstream = next_ds_backup
 					c.write_configuration(next_key, 'enable_miso_downstream')
 
-					ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=10)
+					ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=3)
 					if real_io_channel < 0:
-						ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=10)
+						ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=3)
 						ok = (ok and ok2)
 
 					if ok:
@@ -482,10 +482,10 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 							c.write_configuration(prev_key, 'enable_miso_upstream')
 
 
-						ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=10)
+						ok, diff = c.verify_registers([(next_key, 122), (curr_key, 122)], timeout=0.5, n=3)
 
 						if real_io_channel < 0:
-							ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=10)
+							ok2, diff2 = c.verify_registers([(prev_key, 122)], timeout=0.5, n=3)
 							ok = (ok and ok2)
 
 						continue
@@ -496,8 +496,8 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 def main(tile_number, generate_configuration, tile_id, pacman_version):
 	tile_name = 'id_' + tile_id 
 	io_group = 1
-	#io_channels = [ 1 + 4*(tile_number - 1) + n for n in range(4)]
-	io_channels = [1, 2, 4]
+	io_channels = [ 1 + 4*(tile_number - 1) + n for n in range(4)]
+	#io_channels = [1, 2, 4]
 	c = reset_board_get_controller(io_group, io_channels, pacman_version)
 
 	root_chips, io_channels = get_good_roots(c, io_group, io_channels)
