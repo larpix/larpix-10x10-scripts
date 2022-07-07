@@ -443,8 +443,13 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		c[curr_key].config.enable_miso_upstream = arr.get_uart_enable_list(chip, next_chip)
 		ok,diff = c.enforce_registers([(curr_key, 124)], timeout=0.1, n=5, n_verify=5)
 		if not ok: 
-			print('Failed unabling upstream on C.O.T.: aborted.')
-			continue
+			base___no_enforce.reset(c)
+			c[curr_key].config.enable_miso_upstream = arr.get_uart_enable_list(chip, next_chip)
+			ok,diff = c.enforce_registers([(curr_key, 124)], timeout=0.1, n=5, n_verify=5)
+			if not ok:
+				base___no_enforce.reset(c)
+				print('Failed unabling upstream on C.O.T.: aborted.')
+				continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
 		ok,diff = c.enforce_registers([(test_key, 125)], timeout=0.1, n=5, n_verify=5)
