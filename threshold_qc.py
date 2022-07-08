@@ -220,8 +220,8 @@ def enable_frontend(c, channels, csa_disable, config):
                     c[chip_key].config.csa_enable[channel] = 1
 
     for pair in chip_register_pairs:
-        c.multi_write_configuration([pair], connection_delay=0.001)
-        c.multi_write_configuration([pair], connection_delay=0.001)
+        ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
+        if not ok: print('Unable to enforce config to enable frontend')
         high_rate = True
         runtime = 0.5 #1
         while high_rate:
