@@ -54,7 +54,7 @@ def get_good_roots(c, io_group, io_channels):
 		c[key].config.enable_miso_upstream=[0]*4
 		c.write_configuration(key, 'enable_miso_downstream')
 		c.write_configuration(key, 'enable_miso_upstream')
-		c[key].config.clk_ctrl = _default_clk_ctrl
+		c[key].config.clk_ctrl = base._default_clk_ctrl
 		c.write_configuration(key, 'clk_ctrl')
 		c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[_default_clk_ctrl], io_group=io_group)
 
