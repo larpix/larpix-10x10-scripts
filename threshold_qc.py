@@ -201,7 +201,7 @@ def find_mode(l):
     a = Counter(l)
     return a.most_common(1)
     
-def enable_frontend(c, channels, csa_disable, ):
+def enable_frontend(c, channels, csa_disable, config):
     chip_register_pairs = []
     #for chip in c.chips:
     #    ok,diff = c.verify_registers([(chip, list(range(131,139))+list(range(66,74)))], timeout=0.1, n=3)
@@ -220,8 +220,8 @@ def enable_frontend(c, channels, csa_disable, ):
                     c[chip_key].config.csa_enable[channel] = 1
 
     for pair in chip_register_pairs:
-        c.multi_write_configuration([pair], connection_delay=0.001)
-        c.multi_write_configuration([pair], connection_delay=0.001)
+        ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
+        if not ok: print('Unable to enforce config to enable frontend')
         high_rate = True
         runtime = 0.5 #1
         while high_rate:
@@ -245,8 +245,7 @@ def enable_frontend(c, channels, csa_disable, ):
                 c[pair[0]].config.csa_enable[offending_channel_pair[0]] = 0
                 c[pair[0]].config.channel_mask[offending_channel_pair[0]] = 1
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
-                if not ok: 
-                    print('issue enforcing config')
+                continue
  
             if len(chip_triggers)/runtime > 2000:
                 #print('\t\thigh rate channels! issue soft reset and raise global threshold {}'.format(
@@ -606,7 +605,7 @@ def main(controller_config=_default_controller_config,
     print('==> %.3f seconds --- set global DAC seed \n\n'%timeEnd)
 
     timeStart = time.time()
-    enable_frontend(c, channels, csa_disable)
+    enable_frontend(c, channels, csa_disable, controller_config)
     timeEnd  = time.time()-timeStart
     print('==> %.3f seconds --- enable frontend \n\n'%timeEnd)
 
