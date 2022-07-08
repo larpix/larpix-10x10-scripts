@@ -30,7 +30,7 @@ suffix = ['no_cut','10kHz_cut','1kHz_cut','100Hz_cut']
 v2a_nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
 
 vdda_reg = dict()
-vdda_reg[1] = 0x00024132
+vdda_reg[1] = 0x00024130
 vdda_reg[2] = 0x00024132
 vdda_reg[3] = 0x00024134
 vdda_reg[4] = 0x00024136
