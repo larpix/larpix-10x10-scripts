@@ -247,9 +247,9 @@ def enable_frontend(c, channels, csa_disable, config):
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
                 if True:
                     print('testing reset procedure')
-                    controller_copy = copy.deepcopy(c) 
+                    chips_copy = copy.deepcopy(c.chips) 
                     c = base___no_enforce.reset(c, config)
-                    c = controller_copy
+                    c.chips = chips_copy
                     ok, diff = c.enforce_configuration()
                     print(ok, diff)
                     if not ok: 
