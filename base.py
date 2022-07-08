@@ -299,7 +299,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     flush_data(c)
 
     if not enforce: 
-         if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
+        if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
         print('[FINISH BASE]')
         return c
 
