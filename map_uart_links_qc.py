@@ -30,7 +30,7 @@ clk_ctrl_2_clk_ratio_map = {
 		}
 
 vdda_reg = dict()
-vdda_reg[1] = 0x00024132
+vdda_reg[1] = 0x00024130
 vdda_reg[2] = 0x00024132
 vdda_reg[3] = 0x00024134
 vdda_reg[4] = 0x00024136
@@ -55,7 +55,7 @@ def get_tile_from_io_channel(io_channel):
 def get_all_tiles(io_channel_list):
 	tiles = set()
 	for io_channel in io_channel_list:
-		tiles.add(get_tile_from_io_channel(io_channel))
+		tiles.add( int(get_tile_from_io_channel(io_channel)) )
 	return list(tiles)
 
 def get_reg_pairs(io_channels):
@@ -175,10 +175,13 @@ def get_initial_controller(io_group, io_channels, vdda=0, pacman_version='v1rev3
 		vdda = convert_voltage_for_pacman(vdda)
 		reg_pairs = get_reg_pairs(io_channels)
 		for pair in reg_pairs:
-			c.io.set_reg(pair[0], vdda)
-			c.io.set_reg(pair[1], vddd)
-		c.io.set_reg(0x00000014, 1) # enable global larpix power
-		c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+			c.io.set_reg(pair[0], vdda, io_group=io_group)
+			c.io.set_reg(pair[1], vddd, io_group=io_group)
+		tiles = get_all_tiles(io_channels)
+		bit_string = list('00000000')
+		for tile in tiles: bit_string[-1*tile] = '1'
+		c.io.set_reg(0x00000014, 1, io_group=io_group) # enable global larpix power
+		c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=io_group) # enable tiles to be powered
 
 		power = power_registers()
 		adc_read = 0x00024001
@@ -515,9 +518,8 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		continue
 	return
 
-def main(pacman_tile, skip_test, tile_id, pacman_version, vdda):
+def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	tile_name = 'id-' + tile_id 
-	io_group = 1
 	io_channels = [ 1 + 4*(pacman_tile - 1) + n for n in range(4)]
 	#io_channels = [1, 2, 4]
 	c = get_initial_controller(io_group, io_channels, vdda, pacman_version)
@@ -599,6 +601,7 @@ if __name__ == '__main__':
 	parser.add_argument('--pacman_version', default='v1rev3', type=str, help='''Pacman version; v1rev2 for SingleCube; otherwise, v1rev3''')
 	parser.add_argument('--vdda', default=0, type=float, help='''VDDA setting during test''')
 	parser.add_argument('--tile_id', default='1', type=str, help='''Unique LArPix large-format tile ID''')
+	parser.add_argument('--io_group', default=1, type=int, help='''IO group to perform test on''')
 	parser.add_argument('--skip_test', default=False, type=bool, help='''Flag to only write configuration file with name tile-(tile number).json, skip test''')
 	args = parser.parse_args()
 	c = main(**vars(args))

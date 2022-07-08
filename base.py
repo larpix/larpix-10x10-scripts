@@ -32,7 +32,7 @@ clk_ctrl_2_clk_ratio_map = {
         }
 
 vdda_reg = dict()
-vdda_reg[1] = 0x00024132
+vdda_reg[1] = 0x00024130
 vdda_reg[2] = 0x00024132
 vdda_reg[3] = 0x00024134
 vdda_reg[4] = 0x00024136
@@ -57,7 +57,7 @@ def get_tile_from_io_channel(io_channel):
 def get_all_tiles(io_channel_list):
     tiles = set()
     for io_channel in io_channel_list:
-        tiles.add(get_tile_from_io_channel(io_channel))
+        tiles.add(int(get_tile_from_io_channel(io_channel)) )
     return list(tiles)
 
 def get_reg_pairs(io_channels):
@@ -69,18 +69,22 @@ def get_reg_pairs(io_channels):
 
 
 def set_pacman_power(c, vdda=46020, vddd=40605):
-    active_io_channels = []
-    for io_group, io_channels in c.network.items():
+    for _io_group, io_channels in c.network.items():
+        active_io_channels = []
         for io_channel in io_channels:
             active_io_channels.append(io_channel)
-    reg_pairs = get_reg_pairs(active_io_channels)
-    for pair in reg_pairs:
-        c.io.set_reg(pair[0], vdda)
-        c.io.set_reg(pair[1], vddd)
-    c.io.set_reg(0x00000014, 1) # enable global larpix power
-    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+        reg_pairs = get_reg_pairs(active_io_channels)
+        for pair in reg_pairs:
+            c.io.set_reg(pair[0], vdda, io_group=_io_group)
+            c.io.set_reg(pair[1], vddd, io_group=_io_group)
+        tiles = get_all_tiles(active_io_channels)
+        bit_string = list('00000000')
+        for tile in tiles: bit_string[-1*tile] = '1'
+        c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
+        c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
     time.sleep(0.1)
-    
+
+
 def power_registers():
     adcs=['VDDA', 'IDDA', 'VDDD', 'IDDD']
     data = {}
@@ -110,6 +114,16 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     ###### create controller with pacman io
     c = larpix.Controller()
     c.io = larpix.io.PACMAN_IO(relaxed=True)
+
+     ##### setup hydra network configuration
+    if controller_config is None:
+        c.add_chip(larpix.Key(1, _default_io_channel, _default_chip_id))
+        c.add_network_node(1, _default_io_channel, c.network_names, 'ext', root=True)
+        c.add_network_link(1, _default_io_channel, 'miso_us', ('ext',_default_chip_id), 0)
+        c.add_network_link(1, _default_io_channel, 'miso_ds', (_default_chip_id,'ext'), _default_miso_ds)
+        c.add_network_link(1, _default_io_channel, 'mosi', ('ext', _default_chip_id), _default_mosi)
+    else:
+        c.load(controller_config)
 
     
     ###### set power to tile    
@@ -151,17 +165,6 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
         else: c.logger = larpix.logger.HDF5Logger()
         print('filename:',c.logger.filename)
         c.logger.record_configs(list(c.chips.values()))
-
-
-    ##### setup hydra network configuration
-    if controller_config is None:
-        c.add_chip(larpix.Key(1, _default_io_channel, _default_chip_id))
-        c.add_network_node(1, _default_io_channel, c.network_names, 'ext', root=True)
-        c.add_network_link(1, _default_io_channel, 'miso_us', ('ext',_default_chip_id), 0)
-        c.add_network_link(1, _default_io_channel, 'miso_ds', (_default_chip_id,'ext'), _default_miso_ds)
-        c.add_network_link(1, _default_io_channel, 'mosi', ('ext', _default_chip_id), _default_mosi)
-    else:
-        c.load(controller_config)
 
 
     ##### issue hard reset (resets state machines and configuration memory)
