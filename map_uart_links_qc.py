@@ -11,6 +11,12 @@ import numpy as np
 
 from base import *
 
+def convert_voltage_for_pacman(voltage):
+    max_voltage, max_scale = 1.8, 46020
+    v = voltage
+    if v > max_voltage: v=max_voltage
+    return int( (v/max_voltage)*max_scale )
+
 arr = graphs.NumberedArrangement()
 
 def get_temp_key(io_group, io_channel):
