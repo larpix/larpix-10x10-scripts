@@ -100,7 +100,7 @@ def main(io_group=_default_io_group,
     report_power(c.io, io_group, pacman_tile)
 
     ###### disable tile power
-    io.set_reg(0x00000010, 0, io_group=io_group) # enable tiles to be powered
+    c.io.set_reg(0x00000010, 0, io_group=io_group) # enable tiles to be powered
     
     return c
 
