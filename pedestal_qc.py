@@ -297,12 +297,10 @@ def main(controller_config=_default_controller_config,
         #base___no_enforce.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
         run_pedestal(c, runtime)
 
-    revised_disabled_channels = defaultdict(list)
     revised_bad_channel_filename=None
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
-        _revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-        revised_disabled_channels.update(_revised_disabled_channels)
+        revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, revised_disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
         revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
