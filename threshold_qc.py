@@ -247,6 +247,7 @@ def enable_frontend(c, channels, csa_disable, ):
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
                 if not ok: 
                     print('issue enforcing config')
+                continue
  
             if len(chip_triggers)/runtime > 2000:
                 #print('\t\thigh rate channels! issue soft reset and raise global threshold {}'.format(
