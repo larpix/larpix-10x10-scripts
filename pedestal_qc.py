@@ -306,7 +306,6 @@ def main(controller_config=_default_controller_config,
 
     print('Soft reset issued')
     c.io.reset_larpix(length=24)
-
     return c
 
 
