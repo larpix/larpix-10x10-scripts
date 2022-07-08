@@ -329,7 +329,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 
 
 		#---begin testing of uart---
-		#base___no_enforce.reset(c, config)
+		#base.reset(c, config)
 
 
 		#TESTING DOWNSTREAM FROM CHIP---WRITE CONFIGURATION THROUGH REAL NETWORK,
@@ -373,7 +373,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			arr.add_onesided_excluded_link((next_chip, chip))
 			if not (real_io_channel==io_channel):
 				c.remove_chip(test_key)
-			base___no_enforce.reset(c, config)
+			base.reset(c, config)
 			continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
@@ -422,7 +422,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		if all([ok1, ok2, ok3]): 
 			continue
 		else:
-			base___no_enforce.reset(c, config)
+			base.reset(c, config)
 
 
 
@@ -494,7 +494,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	##
 	##
 	config = _name+'.json'
-	c=base___no_enforce.main(controller_config=config)
+	c=base.main(controller_config=config)
 
 	for ipath, path in enumerate(paths):
 		for ich in range(len(path)):
