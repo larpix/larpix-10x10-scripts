@@ -245,15 +245,6 @@ def enable_frontend(c, channels, csa_disable, config):
                 c[pair[0]].config.csa_enable[offending_channel_pair[0]] = 0
                 c[pair[0]].config.channel_mask[offending_channel_pair[0]] = 1
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
-                if True:
-                    print('testing reset procedure')
-                    chips_copy = copy.deepcopy(c.chips) 
-                    c = base___no_enforce.reset(c, config)
-                    c.chips = chips_copy
-                    ok, diff = c.enforce_configuration()
-                    print(ok, diff)
-                    if not ok: 
-                        raise RuntimeError('Failed enforcing configuration after reset')
                 continue
  
             if len(chip_triggers)/runtime > 2000:
