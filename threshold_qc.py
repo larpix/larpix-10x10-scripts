@@ -3,7 +3,6 @@ import larpix.io
 import larpix.logger
 
 import base
-import base___no_enforce
 import h5py
 import argparse
 import time
@@ -25,59 +24,6 @@ _default_normalization=1.
 _default_verbose=False
 
 nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
-
-vdda_reg = dict()
-vdda_reg[1] = 0x00024130
-vdda_reg[2] = 0x00024132
-vdda_reg[3] = 0x00024134
-vdda_reg[4] = 0x00024136
-vdda_reg[5] = 0x00024138
-vdda_reg[6] = 0x0002413a
-vdda_reg[7] = 0x0002413c
-vdda_reg[8] = 0x0002413e
-
-vddd_reg = dict()
-vddd_reg[1] = 0x00024131
-vddd_reg[2] = 0x00024133
-vddd_reg[3] = 0x00024135
-vddd_reg[4] = 0x00024137
-vddd_reg[5] = 0x00024139
-vddd_reg[6] = 0x0002413b
-vddd_reg[7] = 0x0002413d
-vddd_reg[8] = 0x0002413f
-
-def get_tile_from_io_channel(io_channel):
-    return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
-
-def get_all_tiles(io_channel_list):
-    tiles = set()
-    for io_channel in io_channel_list:
-        tiles.add(int(get_tile_from_io_channel(io_channel)) )
-    return list(tiles)
-
-def get_reg_pairs(io_channels):
-    tiles = get_all_tiles(io_channels)
-    reg_pairs = []
-    for tile in tiles:
-        reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
-    return reg_pairs
-
-
-def set_pacman_power(c, vdda=46020, vddd=40605):
-    for _io_group, io_channels in c.network.items():
-        active_io_channels = []
-        for io_channel in io_channels:
-            active_io_channels.append(io_channel)
-        reg_pairs = get_reg_pairs(active_io_channels)
-        for pair in reg_pairs:
-            c.io.set_reg(pair[0], vdda, io_group=_io_group)
-            c.io.set_reg(pair[1], vddd, io_group=_io_group)
-        tiles = get_all_tiles(active_io_channels)
-        bit_string = list('00000000')
-        for tile in tiles: bit_string[-1*tile] = '1'
-        c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
-        c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
-    time.sleep(0.1)
 
 def measure_background_rate_increase_trim(c, extreme_edge_chip_keys, null_sample_time, set_rate, verbose):
     print('=====> Rate threshold: ',set_rate,' Hz')
@@ -192,13 +138,13 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
             continue
 
         adc = good_data[channel_mask]['dataword']
-        if len(adc) < 2 or np.mean(adc)>200. or np.std(adc)>noise_cut or np.mean(adc)==0:
-            if verbose: print(from_unique_to_chip_key(unique),' disabling channel',from_unique_to_channel_id(unique),
-                              ' with %.2f pedestal ADC RMS'%np.std(adc))
-            if chip_key not in csa_disable: csa_disable[chip_key] = []
-            csa_disable[chip_key].append(from_unique_to_channel_id(unique))
-            count_noisy += 1
-            continue
+       # if len(adc) < 2 or np.mean(adc)>200. or np.std(adc)>noise_cut or np.mean(adc)==0:
+       #     if verbose: print(from_unique_to_chip_key(unique),' disabling channel',from_unique_to_channel_id(unique),
+       #                       ' with %.2f pedestal ADC RMS'%np.std(adc))
+       #     if chip_key not in csa_disable: csa_disable[chip_key] = []
+       #     csa_disable[chip_key].append(from_unique_to_channel_id(unique))
+       #     count_noisy += 1
+       #     continue
 
         pedestal_channel[unique] = dict(mu = np.mean(adc), std = np.std(adc))
 
@@ -276,26 +222,18 @@ def enable_frontend(c, channels, csa_disable, ):
         c.multi_write_configuration([pair], connection_delay=0.001)
         high_rate = True
         runtime = 0.5 #1
-        set_pacman_power(c, vdda=46020)
         while high_rate:
             c.run(runtime,'check rate')
             chip_triggers = c.reads[-1].extract('chip_id',chip_key=pair[0])
             channel_triggers = c.reads[-1].extract('channel_id',chip_key=pair[0])
             #chip_triggers = c.reads[-1].extract('chip_id',chip_key=pair[0],packet_type=0)
-            offending_chip = find_mode(c.reads[-1].extract('chip_id'))
-            try:
-                if not int(offending_chip[0][0])==int(pair[0].chip_id): base___no_enforce.reset(c)
-            except:
-                pass
+            
             fifo_half = c.reads[-1].extract('shared_fifo_half',packet_type=0)
             fifo_full = c.reads[-1].extract('shared_fifo_full',packet_type=0)
             print('\t\tfifo half full {} fifo full {}'.format(sum(fifo_half), sum(fifo_full)))
             print('total packets {}\t{} {}'.format(len(c.reads[-1]),pair[0],len(chip_triggers)))
-            print('offending chip, triggers: {}'.format(offending_chip))
             print('offending channel, triggers: {}'.format(find_mode(channel_triggers)))
-
             if len(chip_triggers)/runtime > 2000:
-                set_pacman_power(c, vdda=0)
                 #print('\t\thigh rate channels! issue soft reset and raise global threshold {}'.format(
                 print('\t\thigh rate channels! raise global threshold {}'.format(
                     #c[pair[0]].config.threshold_global + 1))
@@ -310,11 +248,9 @@ def enable_frontend(c, channels, csa_disable, ):
                 registers = [123, 64]
                 c.write_configuration(pair[0], registers)
                 c.write_configuration(pair[0], registers)
-                set_pacman_power(c, vdda=46020)
             else:
                 high_rate = False
-            set_pacman_power(c, vdda=0)
-            ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
+            ok,diff = c.enforce_registers([pair], timeout=0.4, n=5, n_verify=5)
             if not ok:
                 #print('config error:', diff)
                 raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
@@ -504,8 +440,7 @@ def update_chip(c, status):
                 c[chip_key].config.csa_enable[channel] = 0
                 c[chip_key].config.channel_mask[channel] = 1
 
-    ok, diff = c.enforce_registers(chip_register_pairs, connection_delay=0.1, n=10, n_verify=10)
-    print('chips updated?:', ok)
+    c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     return
 
 def silence_all(c, chip_keys):
@@ -533,13 +468,11 @@ def toggle_trim(c, channels, csa_disable, extreme_edge_chip_keys,
     while flag:
         timeStart = time.time()
         iter_ctr += 1
-        set_pacman_power(c, vdda=46020)
         base.flush_data(c)
         c.multi_read_configuration(extreme_edge_chip_keys, timeout=null_sample_time,message='rate check')
         triggered_channels = c.reads[-1].extract('chip_key','channel_id',packet_type=0)
         print('total rate={}Hz'.format(len(triggered_channels)/null_sample_time))
         fired_channels = {}
-        set_pacman_power(c, vdda=0)
         for chip_key, channel in set(map(tuple,triggered_channels)):
             if chip_key not in fired_channels: fired_channels[chip_key] = []
             fired_channels[chip_key].append(channel)
@@ -628,7 +561,7 @@ def main(controller_config=_default_controller_config,
 
     time_initial = time.time()
 
-    c = base.main(controller_config=controller_config, vdda=0)
+    c = base.main(controller_config=controller_config)
     base.flush_data(c, runtime=2)
     print('START THRESHOLD\n')
 
