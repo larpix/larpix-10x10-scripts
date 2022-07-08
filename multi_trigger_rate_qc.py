@@ -111,7 +111,7 @@ def get_parallel_groups(chip_key_dict):
         groups.append(current_group)
     return groups
 
-def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial):
+def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, config):
     channels = [i for i in range(0,64) if i not in v2a_nonrouted_channels]
     chips = dict()
     reset_threshold = 10000
@@ -175,7 +175,7 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial):
         if rate > 0:
             if not int(offending_chip[0][0]) in [int(chip_key.chip_id) for chip_key in chip_key_group]: 
                 print('Noisy chip elsewhere on board..... resetting')
-                base___no_enforce.reset(c)
+                base___no_enforce.reset(c, config)
   
         for chip_key in chip_key_group:
             c[chip_key].config.channel_mask=[1]*64
@@ -188,12 +188,12 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial):
 
         if rate > reset_threshold:
             print('Rate too high: \t',rate, 'Hz --- automatic reset triggered')
-            base___no_enforce.reset(c)
+            base___no_enforce.reset(c, config)
         else:
             ok, diff = c.enforce_configuration(chip_key_group, timeout=0.01, n=3, n_verify=3)
             if not ok: 
                 print('***config error on',len(diff), 'registers***')
-                base___no_enforce.reset(c)
+                base___no_enforce.reset(c, config)
 
 def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial):
     channels = [i for i in range(0,64) if i not in v2a_nonrouted_channels]
@@ -426,7 +426,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
             for ctr in range(len(rate_cut)):
                 c, fname = initial_setup(ctr, controller_config)
                 print('==> \ttesting ASICs with ',rate_cut[ctr],' Hz trigger rate threshold, Global DAC', thr)
-                asic_test(c, chips_to_test, forbidden, thr, this_it_runtime, enforce_initial)
+                asic_test(c, chips_to_test, forbidden, thr, this_it_runtime, enforce_initial, controller_config)
                 if ctr==3: continue
                 n_initial=len(forbidden)
                 forbidden = evaluate_rate(fname, ctr, this_it_runtime, forbidden)
@@ -444,7 +444,9 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
             n_final=len(forbidden)
             print('==> \tdo not enable list updated with ',n_final-n_initial,' additional channels')
     
-    if not low_dac_asic_test: return c
+    if not low_dac_asic_test: 
+        save_do_not_enable_list(forbidden)
+        return c
 
     print('\n========= Performing low Global threshold trigger rate test ============\n')
     ctr = -1
