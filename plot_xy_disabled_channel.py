@@ -14,8 +14,8 @@ _default_pedestal_disabled=None
 _default_title=None
 _default_geometry_yaml='layout-2.4.0.yaml'
 
-pitch=4.4 # mm
-
+pitch=4.4*0.99 # mm
+nonrouted_v2a_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
 
 
 def parse_file(filename):
@@ -24,8 +24,10 @@ def parse_file(filename):
         data = json.load(f)
         for key in data.keys():
             chip_id = int(key.split('-')[-1])
-            if chip_id not in d: d[chip_id] = []
-            for i in data[key]: d[chip_id].append(i)
+            for i in data[key]:
+                if i not in nonrouted_v2a_channels and i<=63:
+                    if chip_id not in d: d[chip_id] = []
+                    d[chip_id].append(i)
     return d
 
 
@@ -65,8 +67,6 @@ def plot_xy(trigger, pedestal, title, geometry_yaml):
         chip_id = key
         if chip_id not in range(11,111): continue
         for channel_id in trigger[key]:
-            if channel_id in nonrouted_v2a_channels: continue
-            if channel_id not in range(64): continue
             trigger_count+=1
             x = geo['pixels'][chip_pix[chip_id][channel_id]][1]
             y = geo['pixels'][chip_pix[chip_id][channel_id]][2]
@@ -78,9 +78,7 @@ def plot_xy(trigger, pedestal, title, geometry_yaml):
     for key in pedestal.keys():
         chip_id = int(key)
         if chip_id not in range(11,111): continue
-        for channel_id in trigger[key]:
-            if channel_id in nonrouted_v2a_channels: continue
-            if channel_id not in range(64): continue
+        for channel_id in pedestal[key]:
             pedestal_count+=1
             x = geo['pixels'][chip_pix[chip_id][channel_id]][1]
             y = geo['pixels'][chip_pix[chip_id][channel_id]][2]
@@ -95,7 +93,7 @@ def plot_xy(trigger, pedestal, title, geometry_yaml):
         ax.set_title(title+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
     if trigger_count!=0 and pedestal_count!=0:
         ax.set_title(title+'\n'+str(trigger_count)+' trigger rate disabled channels (red)'+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
-    plt.show()
+    plt.savefig(title+'.png')
 
 
     
@@ -103,11 +101,12 @@ def refine_dict(trigger, pedestal):
     result={}
     for key in pedestal.keys():
         for channel in pedestal[key]:
+            flag=True
             if key in trigger:
-                if channel in trigger[key]: continue
-                else:
-                    if key not in result: result[key]=[]
-                    result[key].append(channel)
+                if channel in trigger[key]: flag=False
+            if flag==True:
+                if key not in result: result[key]=[]
+                result[key].append(channel)
     return result
 
 
@@ -117,14 +116,18 @@ def main(trigger_disabled=_default_trigger_disabled,
          geometry_yaml=_default_geometry_yaml,
          title=_default_title,
          **kwargs):
+    if title==None:
+        print('Provide a plot title with --title command line argument. \nExiting')
+        return
 
     trigger_dict={}
     if trigger_disabled!=None: trigger_dict = parse_file(trigger_disabled)
-
+    
     pedestal_dict={}
     if pedestal_disabled!=None: pedestal_dict = parse_file(pedestal_disabled)
-
+    
     if trigger_disabled!=None and pedestal_disabled!=None: pedestal_dict = refine_dict(trigger_dict, pedestal_dict)
+
     plot_xy(trigger_dict, pedestal_dict, title, geometry_yaml)
 
 
