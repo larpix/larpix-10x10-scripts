@@ -2,7 +2,7 @@ import larpix
 import larpix.io
 import larpix.logger
 
-import base___no_enforce
+import base
 
 import argparse
 import json
@@ -12,7 +12,7 @@ import numpy as np
 from collections import Counter
 import time
 
-from base___no_enforce import power_registers
+from base import *
 
 _default_controller_config=None
 _default_chip_key=None
@@ -27,70 +27,18 @@ _default_low_dac_asic_test = False
 rate_cut=[10000,1000]#,100] #,10]
 suffix = ['no_cut','10kHz_cut','1kHz_cut','100Hz_cut']
 
-v2a_nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
-
-vdda_reg = dict()
-vdda_reg[1] = 0x00024130
-vdda_reg[2] = 0x00024132
-vdda_reg[3] = 0x00024134
-vdda_reg[4] = 0x00024136
-vdda_reg[5] = 0x00024138
-vdda_reg[6] = 0x0002413a
-vdda_reg[7] = 0x0002413c
-vdda_reg[8] = 0x0002413e
-
-vddd_reg = dict()
-vddd_reg[1] = 0x00024131
-vddd_reg[2] = 0x00024133
-vddd_reg[3] = 0x00024135
-vddd_reg[4] = 0x00024137
-vddd_reg[5] = 0x00024139
-vddd_reg[6] = 0x0002413b
-vddd_reg[7] = 0x0002413d
-vddd_reg[8] = 0x0002413f
-
-def get_tile_from_io_channel(io_channel):
-    return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
-
-def get_all_tiles(io_channel_list):
-    tiles = set()
-    for io_channel in io_channel_list:
-        tiles.add(get_tile_from_io_channel(io_channel))
-    return list(tiles)
-
-def get_reg_pairs(io_channels):
-    tiles = get_all_tiles(io_channels)
-    reg_pairs = []
-    for tile in tiles:
-        reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
-    return reg_pairs
-
-
-def set_pacman_power(c, vdda=46020, vddd=40605):
-    active_io_channels = []
-    for io_group, io_channels in c.network.items():
-        for io_channel in io_channels:
-            active_io_channels.append(io_channel)
-    reg_pairs = get_reg_pairs(active_io_channels)
-    for pair in reg_pairs:
-        c.io.set_reg(pair[0], vdda)
-        c.io.set_reg(pair[1], vddd)
-    c.io.set_reg(0x00000014, 1) # enable global larpix power
-    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
-    time.sleep(0.1)
-
 def initial_setup(ctr, controller_config):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     fname="trigger_rate_%s_" % suffix[ctr] #str(rate_cut[ctr])
     fname=fname+str(now)+".h5"
-    c = base___no_enforce.main(controller_config, logger=True, filename=fname)
+    c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
 def initial_setup_low_dac(controller_config):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     fname="low_thresh_trigger_rate_"#str(rate_cut[ctr])
     fname=fname+str(now)+".h5"
-    c = base___no_enforce.main(controller_config, logger=True, filename=fname)
+    c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
 def find_mode(l):
@@ -122,7 +70,7 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, 
             chips[(io_group, io_channel)] = [larpix.key.Key(io_group, io_channel, chip) for chip in network_ids if larpix.key.Key(io_group, io_channel, chip) in chips_to_test ]
     c.io.double_send_packets = False
     grouped_chips_to_test = get_parallel_groups(chips)
-    base___no_enforce.reset(c)
+    base.reset(c)
     set_pacman_power(c, vdda=46020)
     for chip_key_group in grouped_chips_to_test:
         chip_register_pairs=[]
@@ -154,7 +102,7 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, 
                 ok, diff = c.enforce_configuration(chip_register_pairs, timeout=0.01, n=3, n_verify=3)
                 set_pacman_power(c, vdda=46020)
 
-        base___no_enforce.flush_data(c)
+        base.flush_data(c)
         c.logger.enable()
         c.run(runtime,'collect data')
         c.logger.flush()
@@ -175,7 +123,7 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, 
         if rate > 0:
             if not int(offending_chip[0][0]) in [int(chip_key.chip_id) for chip_key in chip_key_group]: 
                 print('Noisy chip elsewhere on board..... resetting')
-                base___no_enforce.reset(c, config)
+                base.reset(c, config)
   
         for chip_key in chip_key_group:
             c[chip_key].config.channel_mask=[1]*64
@@ -188,12 +136,12 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, 
 
         if rate > reset_threshold:
             print('Rate too high: \t',rate, 'Hz --- automatic reset triggered')
-            base___no_enforce.reset(c, config)
+            base.reset(c, config)
         else:
             ok, diff = c.enforce_configuration(chip_key_group, timeout=0.01, n=3, n_verify=3)
             if not ok: 
                 print('***config error on',len(diff), 'registers***')
-                base___no_enforce.reset(c, config)
+                base.reset(c, config)
 
 def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial):
     channels = [i for i in range(0,64) if i not in v2a_nonrouted_channels]
@@ -206,7 +154,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
             chips[(io_group, io_channel)] = [larpix.key.Key(io_group, io_channel, chip) for chip in network_ids if larpix.key.Key(io_group, io_channel, chip) in chips_to_test ]
     c.io.double_send_packets = False
     grouped_chips_to_test = get_parallel_groups(chips)
-    base___no_enforce.reset(c)
+    base.reset(c)
     set_pacman_power(c, vdda=46020)
     for chip_key_group in grouped_chips_to_test:
         chip_register_pairs=[]
@@ -245,7 +193,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
             c.multi_write_configuration(chip_register_pairs)
             if enforce_initial: 
                 ok, diff = c.enforce_registers(chip_register_pairs, timeout=0.01, n=3, n_verify=3)
-            base___no_enforce.flush_data(c)
+            base.flush_data(c)
             #c.logger.enable()
             c.run(runtime,'collect data')
             #c.logger.flush()
@@ -274,7 +222,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
             if rate > 0:
                 if not int(offending_chip[0][0]) in [int(chip_key.chip_id) for chip_key in chip_key_group]: 
                     print('Noisy chip elsewhere on board..... resetting')
-                    base___no_enforce.reset(c)
+                    base.reset(c)
                     c.multi_write_configuration(chip_register_pairs)
                     c.multi_write_configuration(chip_register_pairs)
 
@@ -289,7 +237,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
                 c[chip_key].config.channel_mask[channel] = 0
                 c[chip_key].config.csa_enable[channel] = 1
 
-        base___no_enforce.flush_data(c)
+        base.flush_data(c)
         c.logger.enable()
         c.run(runtime,'collect data')
         c.logger.flush()
@@ -310,7 +258,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
             if rate > 0:
                 if not int(offending_chip[0][0]) in [int(chip_key.chip_id) for chip_key in chip_key_group]: 
                     print('Noisy chip elsewhere on board..... resetting')
-                    base___no_enforce.reset(c)
+                    base.reset(c)
 
   
         for chip_key in chip_key_group:
@@ -326,7 +274,7 @@ def low_dac_asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_i
             ok, diff = c.enforce_registers(chip_register_pairs, timeout=0.01, n=3, n_verify=3)
             if not ok: 
                 print('***config error on',len(diff), 'registers***')
-                base___no_enforce.reset(c)
+                base.reset(c)
         
               
 def unique_channel_id(io_group, io_channel, chip_id, channel_id):
@@ -395,7 +343,7 @@ def save_do_not_enable_list(forbidden):
 def main(controller_config=_default_controller_config, chip_key=_default_chip_key, threshold=_default_threshold, runtime=_default_runtime, disabled_list=_default_disabled_list, cryo=_default_cryo, low_dac_asic_test=_default_low_dac_asic_test):
     print('START ITERATIVE TRIGGER RATE TEST')
 
-    c = base___no_enforce.main(controller_config)
+    c = base.main(controller_config, enforce=False)
     chips_to_test = c.chips.keys()
     if not chip_key is None: chips_to_test = [chip_key]
     print('chips to test: ',chips_to_test)
