@@ -516,3 +516,6 @@ if __name__ == '__main__':
 	parser.add_argument('--skip_test', default=False, type=bool, help='''Flag to only write configuration file with name tile-(tile number).json, skip test''')
 	args = parser.parse_args()
 	c = main(**vars(args))
+    ###### disable tile power
+    c.io.set_reg(0x00000010, 0, io_group=args['io_group'])
+
