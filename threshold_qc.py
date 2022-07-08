@@ -3,12 +3,14 @@ import larpix.io
 import larpix.logger
 
 import base
+import base___no_enforce
 import h5py
 import argparse
 import time
 import numpy as np
 import json
 from collections import Counter
+import copy
 
 _default_controller_config=None
 _default_pedestal_file=None
@@ -138,13 +140,13 @@ def find_pedestal(pedestal_file, noise_cut, c, verbose):
             continue
 
         adc = good_data[channel_mask]['dataword']
-       # if len(adc) < 2 or np.mean(adc)>200. or np.std(adc)>noise_cut or np.mean(adc)==0:
-       #     if verbose: print(from_unique_to_chip_key(unique),' disabling channel',from_unique_to_channel_id(unique),
-       #                       ' with %.2f pedestal ADC RMS'%np.std(adc))
-       #     if chip_key not in csa_disable: csa_disable[chip_key] = []
-       #     csa_disable[chip_key].append(from_unique_to_channel_id(unique))
-       #     count_noisy += 1
-       #     continue
+        if len(adc) < 2 or np.mean(adc)>200. or np.std(adc)>noise_cut or np.mean(adc)==0:
+            if verbose: print(from_unique_to_chip_key(unique),' disabling channel',from_unique_to_channel_id(unique),
+                              ' with %.2f pedestal ADC RMS'%np.std(adc))
+            if chip_key not in csa_disable: csa_disable[chip_key] = []
+            csa_disable[chip_key].append(from_unique_to_channel_id(unique))
+            count_noisy += 1
+            continue
 
         pedestal_channel[unique] = dict(mu = np.mean(adc), std = np.std(adc))
 
@@ -232,7 +234,17 @@ def enable_frontend(c, channels, csa_disable, ):
             fifo_full = c.reads[-1].extract('shared_fifo_full',packet_type=0)
             print('\t\tfifo half full {} fifo full {}'.format(sum(fifo_half), sum(fifo_full)))
             print('total packets {}\t{} {}'.format(len(c.reads[-1]),pair[0],len(chip_triggers)))
-            print('offending channel, triggers: {}'.format(find_mode(channel_triggers)))
+            offending_channel_pair = find_mode(channel_triggers) 
+            print(offending_channel_pair, offending_channel_pair[0], offending_channel_pair[1])
+            print('offending channel, triggers: {}'.format(offending_channel_pair))
+            if offending_channel_pair[1] > 10000:
+                print('rate too high!! disabling channel', pair[0], offending_channel_pair[0])
+                c[pair[0]].config.csa_enable[offending_channel_pair[0]] = 0
+                c[pair[0]].config.channel_mask[offending_channel_pair[0]] = 1
+                ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
+                if not ok: 
+                    print('issue enforcing config')
+                continue
             if len(chip_triggers)/runtime > 2000:
                 #print('\t\thigh rate channels! issue soft reset and raise global threshold {}'.format(
                 print('\t\thigh rate channels! raise global threshold {}'.format(
@@ -250,7 +262,7 @@ def enable_frontend(c, channels, csa_disable, ):
                 c.write_configuration(pair[0], registers)
             else:
                 high_rate = False
-            ok,diff = c.enforce_registers([pair], timeout=0.4, n=5, n_verify=5)
+            ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
             if not ok:
                 #print('config error:', diff)
                 raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
