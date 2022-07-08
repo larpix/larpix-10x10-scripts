@@ -27,27 +27,60 @@ _default_noise_cut_value=10.
 _default_no_apply_noise_cut=False
 _default_no_refinement=False
 
+vdda_reg = dict()
+vdda_reg[1] = 0x00024130
+vdda_reg[2] = 0x00024132
+vdda_reg[3] = 0x00024134
+vdda_reg[4] = 0x00024136
+vdda_reg[5] = 0x00024138
+vdda_reg[6] = 0x0002413a
+vdda_reg[7] = 0x0002413c
+vdda_reg[8] = 0x0002413e
+
+vddd_reg = dict()
+vddd_reg[1] = 0x00024131
+vddd_reg[2] = 0x00024133
+vddd_reg[3] = 0x00024135
+vddd_reg[4] = 0x00024137
+vddd_reg[5] = 0x00024139
+vddd_reg[6] = 0x0002413b
+vddd_reg[7] = 0x0002413d
+vddd_reg[8] = 0x0002413f
+
+def get_tile_from_io_channel(io_channel):
+    return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
+
+def get_all_tiles(io_channel_list):
+    tiles = set()
+    for io_channel in io_channel_list:
+        tiles.add( int(get_tile_from_io_channel(io_channel)) )
+    return list(tiles)
+
+def get_reg_pairs(io_channels):
+    tiles = get_all_tiles(io_channels)
+    reg_pairs = []
+    for tile in tiles:
+        reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
+    return reg_pairs
+
+
 def set_pacman_power(c, vdda=46020, vddd=40605):
-    c.io.set_reg(0x00024130, vdda) # tile 1 VDDA
-    c.io.set_reg(0x00024131, vddd) # tile 1 VDDD
-    c.io.set_reg(0x00024132, vdda) # tile 2 VDDA
-    c.io.set_reg(0x00024133, vddd) # tile 2 VDDD
-    c.io.set_reg(0x00024134, vdda) # tile 3 VDDA
-    c.io.set_reg(0x00024135, vddd) # tile 3 VDDD
-    c.io.set_reg(0x00024136, vdda) # tile 4 VDDA
-    c.io.set_reg(0x00024137, vddd) # tile 4 VDDD
-    c.io.set_reg(0x00024138, vdda) # tile 5 VDDA
-    c.io.set_reg(0x00024139, vddd) # tile 5 VDDD
-    c.io.set_reg(0x0002413a, vdda) # tile 6 VDDA
-    c.io.set_reg(0x0002413b, vddd) # tile 6 VDDD
-    c.io.set_reg(0x0002413c, vdda) # tile 7 VDDA
-    c.io.set_reg(0x0002413d, vddd) # tile 7 VDDD
-    c.io.set_reg(0x0002413e, vdda) # tile 8 VDDA
-    c.io.set_reg(0x0002413f, vddd) # tile 8 VDDD
-    c.io.set_reg(0x00000014, 1) # enable global larpix power
-    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
-    time.sleep(0.2)
-    
+    for _io_group, io_channels in c.network.items():
+        active_io_channels = []
+        for io_channel in io_channels:
+            active_io_channels.append(io_channel)
+        reg_pairs = get_reg_pairs(active_io_channels)
+        for pair in reg_pairs:
+            c.io.set_reg(pair[0], vdda, io_group=_io_group)
+            c.io.set_reg(pair[1], vddd, io_group=_io_group)
+        tiles = get_all_tiles(active_io_channels)
+        bit_string = list('00000000')
+        for tile in tiles: bit_string[-1*tile] = '1'
+        c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
+        c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
+    time.sleep(0.1)
+
+
 def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     c.io.group_packets_by_io_group = True
     c.io.double_send_packets = True
@@ -251,7 +284,7 @@ def main(controller_config=_default_controller_config,
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-        revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
+      #  revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     if no_refinement==False:
@@ -268,7 +301,8 @@ def main(controller_config=_default_controller_config,
     revised_bad_channel_filename=None
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
-        revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
+        _revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
+        revised_disabled_channels.update(_revised_disabled_channels)
         revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
