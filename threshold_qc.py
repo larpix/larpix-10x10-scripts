@@ -3,7 +3,6 @@ import larpix.io
 import larpix.logger
 
 import base
-import base___no_enforce
 import h5py
 import argparse
 import time
@@ -11,6 +10,8 @@ import numpy as np
 import json
 from collections import Counter
 import copy
+
+from base import *
 
 _default_controller_config=None
 _default_pedestal_file=None
@@ -85,21 +86,6 @@ def measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable,
         #        c.write_configuration(chip_key,'channel_mask')
 
     return csa_disable
-
-def unique_channel_id(io_group, io_channel, chip_id, channel_id):
-    return channel_id + 100*(chip_id + 1000*(io_channel + 1000*(io_group)))
-
-def from_unique_to_channel_id(unique):
-    return int(unique) % 100
-
-def from_unique_to_chip_id(unique):
-    return int(unique//100) % 1000
-
-def from_unique_to_chip_key(unique):
-    io_group = (unique // (100*1000*1000)) % 1000
-    io_channel = (unique // (100*1000)) % 1000
-    chip_id = (unique // 100) % 1000
-    return larpix.Key(io_group, io_channel, chip_id)
 
 def disable_channel(c, chip_key, channel, csa_disable):
     if chip_key not in csa_disable: csa_disable[chip_key] = []
