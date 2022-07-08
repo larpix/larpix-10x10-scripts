@@ -245,7 +245,7 @@ def enable_frontend(c, channels, csa_disable, config):
                 c[pair[0]].config.csa_enable[offending_channel_pair[0]] = 0
                 c[pair[0]].config.channel_mask[offending_channel_pair[0]] = 1
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
-                if not True:
+                if True:
                     print('testing reset procedure')
                     controller_copy = copy.deepcopy(c) 
                     c = base___no_enforce.reset(c, config)
