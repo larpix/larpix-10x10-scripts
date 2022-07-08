@@ -127,8 +127,8 @@ def main(network_json=_default_network_json, geometry_yaml=_default_geometry_yam
     
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--network_json', default=_default_network_json, type=str)
-    parser.add_argument('--geometry_yaml', default=_default_geometry_yaml, type=str)
-    parser.add_argument('--io_group', default=_default_io_group, type=int)
+    parser.add_argument('--network_json', default=_default_network_json, type=str, help='''Hydra network json configuration file''')
+    parser.add_argument('--geometry_yaml', default=_default_geometry_yaml, type=str, help='''geometry yaml (layout 2.4.0 for LArPix-v2a 10x10 tile)''')
+    parser.add_argument('--io_group', default=_default_io_group, type=int, help='''PACMAN IO group''')
     args = parser.parse_args()
     main(**vars(args))
