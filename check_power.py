@@ -10,7 +10,7 @@ import numpy as np
 import time
 
 
-_default_tile=1
+_default_pacman_tile=1
 _default_io_group=1
 
 vdda_reg = dict()
@@ -87,24 +87,29 @@ def report_power(io, io_group, tile):
 
 
     
-def main(tile=_default_tile, io_group=_default_io_group, **kwargs):
+def main(io_group=_default_io_group,
+         pacman_tile=_default_pacman_tile,
+         **kwargs):
 
     ###### create controller with pacman io
     c = larpix.Controller()
     c.io = larpix.io.PACMAN_IO(relaxed=True)
     
     ###### set power to tile    
-    set_pacman_power(c.io, io_group, tile)
-    report_power(c.io, io_group, tile)
+    set_pacman_power(c.io, io_group, pacman_tile)
+    report_power(c.io, io_group, pacman_tile)
 
+    ###### disable tile power
+    io.set_reg(0x00000010, 0, io_group=io_group) # enable tiles to be powered
+    
     return c
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tile', default=_default_tile, type=int, help='''PACMAN tile ''')
     parser.add_argument('--io_group', default=_default_io_group, type=int, help='''IO group ''')
+    parser.add_argument('--pacman_tile', default=_default_pacman_tile, type=int, help='''PACMAN tile ''')
     args = parser.parse_args()
     c = main(**vars(args))
 
