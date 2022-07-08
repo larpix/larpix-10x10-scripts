@@ -201,7 +201,7 @@ def find_mode(l):
     a = Counter(l)
     return a.most_common(1)
     
-def enable_frontend(c, channels, csa_disable, ):
+def enable_frontend(c, channels, csa_disable, config):
     chip_register_pairs = []
     #for chip in c.chips:
     #    ok,diff = c.verify_registers([(chip, list(range(131,139))+list(range(66,74)))], timeout=0.1, n=3)
@@ -245,8 +245,13 @@ def enable_frontend(c, channels, csa_disable, ):
                 c[pair[0]].config.csa_enable[offending_channel_pair[0]] = 0
                 c[pair[0]].config.channel_mask[offending_channel_pair[0]] = 1
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
-                if not ok: 
-                    print('issue enforcing config')
+                if not ok:
+                    controller_copy = copy.deepcopy(c) 
+                    c = base___no_enforce.reset(c, config)
+                    c = controller_copy
+                    ok, diff = c.enforce_configuration()
+                    if not ok: 
+                        raise RuntimeError('Failed enforcing configuration after reset')
                 continue
  
             if len(chip_triggers)/runtime > 2000:
@@ -607,7 +612,7 @@ def main(controller_config=_default_controller_config,
     print('==> %.3f seconds --- set global DAC seed \n\n'%timeEnd)
 
     timeStart = time.time()
-    enable_frontend(c, channels, csa_disable)
+    enable_frontend(c, channels, csa_disable, controller_config)
     timeEnd  = time.time()-timeStart
     print('==> %.3f seconds --- enable frontend \n\n'%timeEnd)
 
