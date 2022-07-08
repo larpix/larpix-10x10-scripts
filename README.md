@@ -1,3 +1,5 @@
+# Note--This README is out of date. Please refer to the charge acceptance testing documentation for the most up to date instructions.
+
 # Overview
 This directory contains a variety of scripts and configurations that assess the analog / digital performance
 of the LArPix 10x10 tile.
