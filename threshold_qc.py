@@ -235,7 +235,7 @@ def enable_frontend(c, channels, csa_disable, ):
             print('\t\tfifo half full {} fifo full {}'.format(sum(fifo_half), sum(fifo_full)))
             print('total packets {}\t{} {}'.format(len(c.reads[-1]),pair[0],len(chip_triggers)))
             offending_channel_pair = find_mode(channel_triggers) 
-            print(offending_channel_pair, offending_channel_pair[0], offending_channel_pair[1])
+            print(offending_channel_pair)
             print('offending channel, triggers: {}'.format(offending_channel_pair))
             if offending_channel_pair[1] > 10000:
                 print('rate too high!! disabling channel', pair[0], offending_channel_pair[0])
