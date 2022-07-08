@@ -6,6 +6,9 @@ from copy import deepcopy
 import larpix
 import larpix.io
 import larpix.logger
+import numpy as np
+import time
+
 
 _default_controller_config=None
 _default_pacman_version='v1rev3'
@@ -28,6 +31,56 @@ clk_ctrl_2_clk_ratio_map = {
         3: 16
         }
 
+vdda_reg = dict()
+vdda_reg[1] = 0x00024132
+vdda_reg[2] = 0x00024132
+vdda_reg[3] = 0x00024134
+vdda_reg[4] = 0x00024136
+vdda_reg[5] = 0x00024138
+vdda_reg[6] = 0x0002413a
+vdda_reg[7] = 0x0002413c
+vdda_reg[8] = 0x0002413e
+
+vddd_reg = dict()
+vddd_reg[1] = 0x00024131
+vddd_reg[2] = 0x00024133
+vddd_reg[3] = 0x00024135
+vddd_reg[4] = 0x00024137
+vddd_reg[5] = 0x00024139
+vddd_reg[6] = 0x0002413b
+vddd_reg[7] = 0x0002413d
+vddd_reg[8] = 0x0002413f
+
+def get_tile_from_io_channel(io_channel):
+    return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
+
+def get_all_tiles(io_channel_list):
+    tiles = set()
+    for io_channel in io_channel_list:
+        tiles.add(get_tile_from_io_channel(io_channel))
+    return list(tiles)
+
+def get_reg_pairs(io_channels):
+    tiles = get_all_tiles(io_channels)
+    reg_pairs = []
+    for tile in tiles:
+        reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
+    return reg_pairs
+
+
+def set_pacman_power(c, vdda=46020, vddd=40605):
+    active_io_channels = []
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            active_io_channels.append(io_channel)
+    reg_pairs = get_reg_pairs(active_io_channels)
+    for pair in reg_pairs:
+        c.io.set_reg(pair[0], vdda)
+        c.io.set_reg(pair[1], vddd)
+    c.io.set_reg(0x00000014, 1) # enable global larpix power
+    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+    time.sleep(0.1)
+    
 def power_registers():
     adcs=['VDDA', 'IDDA', 'VDDD', 'IDDD']
     data = {}
@@ -61,25 +114,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     
     ###### set power to tile    
     if pacman_version=='v1rev3':
-        vddd = 40605
-        c.io.set_reg(0x00024130, vdda) # tile 1 VDDA
-        c.io.set_reg(0x00024131, vddd) # tile 1 VDDD
-        c.io.set_reg(0x00024132, vdda) # tile 2 VDDA
-        c.io.set_reg(0x00024133, vddd) # tile 2 VDDD
-        c.io.set_reg(0x00024134, vdda) # tile 3 VDDA
-        c.io.set_reg(0x00024135, vddd) # tile 3 VDDD
-        c.io.set_reg(0x00024136, vdda) # tile 4 VDDA
-        c.io.set_reg(0x00024137, vddd) # tile 4 VDDD
-        c.io.set_reg(0x00024138, vdda) # tile 5 VDDA
-        c.io.set_reg(0x00024139, vddd) # tile 5 VDDD
-        c.io.set_reg(0x0002413a, vdda) # tile 6 VDDA
-        c.io.set_reg(0x0002413b, vddd) # tile 6 VDDD
-        c.io.set_reg(0x0002413c, vdda) # tile 7 VDDA
-        c.io.set_reg(0x0002413d, vddd) # tile 7 VDDD
-        c.io.set_reg(0x0002413e, vdda) # tile 8 VDDA
-        c.io.set_reg(0x0002413f, vddd) # tile 8 VDDD
-        c.io.set_reg(0x00000014, 1) # enable global larpix power
-        c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+        set_pacman_power(c)
 
         power = power_registers()
         adc_read = 0x00024001

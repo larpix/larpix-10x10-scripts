@@ -348,7 +348,7 @@ def test_network(c, io_group, io_channels, paths):
 
 	return all(valid)
 
-def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_copy):
+def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_copy, config):
 	#-loop over all UARTs on current chip
 	#-check if chip in that direction is in current network
 	#---if in network:
@@ -405,6 +405,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 
 
 		#---begin testing of uart---
+		#base___no_enforce.reset(c, config)
 
 
 		#TESTING DOWNSTREAM FROM CHIP---WRITE CONFIGURATION THROUGH REAL NETWORK,
@@ -443,13 +444,13 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		c[curr_key].config.enable_miso_upstream = arr.get_uart_enable_list(chip, next_chip)
 		ok,diff = c.enforce_registers([(curr_key, 124)], timeout=0.1, n=5, n_verify=5)
 		if not ok: 
-			base___no_enforce.reset(c)
-			c[curr_key].config.enable_miso_upstream = arr.get_uart_enable_list(chip, next_chip)
-			ok,diff = c.enforce_registers([(curr_key, 124)], timeout=0.1, n=5, n_verify=5)
-			if not ok:
-				base___no_enforce.reset(c)
-				print('Failed unabling upstream on C.O.T.: aborted.')
-				continue
+			print('broken')
+			arr.add_onesided_excluded_link((chip, next_chip))
+			arr.add_onesided_excluded_link((next_chip, chip))
+			if not (real_io_channel==io_channel):
+				c.remove_chip(test_key)
+			base___no_enforce.reset(c, config)
+			continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
 		ok,diff = c.enforce_registers([(test_key, 125)], timeout=0.1, n=5, n_verify=5)
@@ -477,6 +478,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		if not ok1: 
 			print('****** Issue returning current chip', curr_key, 'to original config')
 			print(diff)
+			print('reset planned')
 
 		if not prev_us_backup is None:
 			c[prev_key].config.enable_miso_upstream = prev_us_backup
@@ -484,17 +486,19 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			if not ok2: 
 				print('****** Issue returning downstream chip', prev_key, 'to original config')
 				print(diff)
+				print('reset planned')
 
 		c[real_next_key].config.enable_miso_downstream = next_ds_backup
 		ok3,diff = c.enforce_registers([(real_next_key, 125)], timeout=0.2, n=10, n_verify=5)
 		if not ok3: 
 			print('****** Issue returning N.C.O.T.', real_next_key, 'to original config')
 			print(diff)
+			print('reset planned')
 
 		if all([ok1, ok2, ok3]): 
 			continue
 		else:
-			base___no_enforce.reset(c)
+			base___no_enforce.reset(c, config)
 
 
 
@@ -568,11 +572,12 @@ def main(pacman_tile, skip_test, tile_id, pacman_version, vdda):
 	print(  '***************************************\n')
 	##
 	##
-	c=base___no_enforce.main(controller_config=_name+'.json')
+	config = _name+'.json'
+	c=base___no_enforce.main(controller_config=config)
 
 	for ipath, path in enumerate(paths):
 		for ich in range(len(path)):
-			ok = test_chip(c, io_group, io_channels[ipath], path, ich, paths.copy(), io_channels.copy())
+			ok = test_chip(c, io_group, io_channels[ipath], path, ich, paths.copy(), io_channels.copy(), config)
 			#only returns whether or not a test was performed, not the test status
 			if not ok:
 				chips_to_test.append(path[ich])
