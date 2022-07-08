@@ -236,7 +236,9 @@ def enable_frontend(c, channels, csa_disable, ):
             print('total packets {}\t{} {}'.format(len(c.reads[-1]),pair[0],len(chip_triggers)))
             offending_channel_pair_list = find_mode(channel_triggers) 
             print('offending channel, triggers: {}'.format(offending_channel_pair_list))
-            if len(offending_channel_pair_list) == 0: continue
+            if len(offending_channel_pair_list) == 0: 
+                high_rate=False
+                continue
             offending_channel_pair = offending_channel_pair_list[0]
             if offending_channel_pair[1] > 10000:
                 print('rate too high!! disabling channel', pair[0], offending_channel_pair[0])
@@ -245,7 +247,7 @@ def enable_frontend(c, channels, csa_disable, ):
                 ok,diff = c.enforce_registers([pair], timeout=0.1, n=3, n_verify=3)
                 if not ok: 
                     print('issue enforcing config')
-                continue
+ 
             if len(chip_triggers)/runtime > 2000:
                 #print('\t\thigh rate channels! issue soft reset and raise global threshold {}'.format(
                 print('\t\thigh rate channels! raise global threshold {}'.format(
