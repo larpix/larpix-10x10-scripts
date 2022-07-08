@@ -9,6 +9,7 @@ import larpix.logger
 import numpy as np
 import time
 
+LARPIX_10X10_SCRIPTS_VERSION=1.0
 
 _default_controller_config=None
 _default_pacman_version='v1rev3'
@@ -128,10 +129,10 @@ def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
         if len(controller.reads[-1])/runtime <= rate_limit:
             break
 
-def reset(c, config=None):
+def reset(c, config=None, enforce=False, verbose=False, modify_power=False):
     ##### issue hard reset (resets state machines and configuration memory)
     if not config is None:
-        new_controller = main(controller_config=config, modify_power=False, verbose=False)
+        new_controller = main(controller_config=config, modify_power=modify_power, verbose=verbose, enforce=enforce)
         return new_controller
 
     c.io.reset_larpix(length=10240)
@@ -190,7 +191,7 @@ def reset(c, config=None):
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, verbose=True, modify_power=True, **kwargs):
     print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
@@ -208,40 +209,40 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
 
     
     ###### set power to tile    
-    if pacman_version=='v1rev3':
-        set_pacman_power(c)
+    if modify_power:
+        if pacman_version=='v1rev3':
+            set_pacman_power(c)
+            power = power_registers()
+            adc_read = 0x00024001
+            for i in power.keys():
+                val_vdda = c.io.get_reg(adc_read+power[i][0], io_group=1)
+                val_idda = c.io.get_reg(adc_read+power[i][1], io_group=1)
+                val_vddd = c.io.get_reg(adc_read+power[i][2], io_group=1)
+                val_iddd = c.io.get_reg(adc_read+power[i][3], io_group=1)
+                print('TILE',i,
+                    '\tVDDA:',(((val_vdda>>16)>>3)*4),
+                    '\tIDDA:',(((val_idda>>16)-(val_idda>>31)*65535)*500*0.01),
+                    '\tVDDD:',(((val_vddd>>16)>>3)*4),
+                    '\tIDDD:',(((val_iddd>>16)-(val_iddd>>31)*65535)*500*0.01),
+                )
 
-        power = power_registers()
-        adc_read = 0x00024001
-        for i in power.keys():
-            val_vdda = c.io.get_reg(adc_read+power[i][0], io_group=1)
-            val_idda = c.io.get_reg(adc_read+power[i][1], io_group=1)
-            val_vddd = c.io.get_reg(adc_read+power[i][2], io_group=1)
-            val_iddd = c.io.get_reg(adc_read+power[i][3], io_group=1)
-            print('TILE',i,
-                  '\tVDDA:',(((val_vdda>>16)>>3)*4),
-                  '\tIDDA:',(((val_idda>>16)-(val_idda>>31)*65535)*500*0.01),
-                  '\tVDDD:',(((val_vddd>>16)>>3)*4),
-                  '\tIDDD:',(((val_iddd>>16)-(val_iddd>>31)*65535)*500*0.01),
-              )
-
-    if pacman_version=='v1rev2':
-        mask=c.io.enable_tile()[1]; print('Tile enabled? ',hex(mask))
+        if pacman_version=='v1rev2':
+            mask=c.io.enable_tile()[1]; print('Tile enabled? ',hex(mask))
         
-        # !!!!! for single chip testboard, use vdda, vddd 0xd2cd
-        vddd=0xd8e4 # for 100 chip tile w/ O(1m) cable
-        vdda=0xd8e4 # for 100 chip tile w/ O(1m) cable
-        c.io.set_vddd(vddd)[1]
-        c.io.set_vdda(vdda)[1]
+            # !!!!! for single chip testboard, use vdda, vddd 0xd2cd
+            vddd=0xd8e4 # for 100 chip tile w/ O(1m) cable
+            vdda=0xd8e4 # for 100 chip tile w/ O(1m) cable
+            c.io.set_vddd(vddd)[1]
+            c.io.set_vdda(vdda)[1]
 
-        vddd,iddd = c.io.get_vddd()[1]
-        vdda,idda = c.io.get_vdda()[1]
-        print('VDDD: ',vddd,' mV\t IDDD: ',iddd,' mA\nVDDA: ',vdda,' mV\t IDDA: ',idda,' mA')
-        for ch in range(1,5): c.io.set_reg(0x1000*ch + 0x2014, 0)
+            vddd,iddd = c.io.get_vddd()[1]
+            vdda,idda = c.io.get_vdda()[1]
+            print('VDDD: ',vddd,' mV\t IDDD: ',iddd,' mA\nVDDA: ',vdda,' mV\t IDDA: ',idda,' mA')
+            for ch in range(1,5): c.io.set_reg(0x1000*ch + 0x2014, 0)
 
     
     if logger:
-        print('logger enabled')
+        if verbose: print('logger enabled')
         if 'filename' in kwargs: c.logger = larpix.logger.HDF5Logger(filename=kwargs['filename'])
         else: c.logger = larpix.logger.HDF5Logger()
         print('filename:',c.logger.filename)
@@ -283,7 +284,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
 
 
     ##### setup low-level registers to enable loopback
-    print('set base configuration: Vref DAC, Vcm DAC, ADC hold delay, MISO differential')
+    if verbose: print('set base configuration: Vref DAC, Vcm DAC, ADC hold delay, MISO differential')
     chip_config_pairs=[]
     for chip_key, chip in reversed(c.chips.items()):
         initial_config = deepcopy(chip.config)
@@ -300,7 +301,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
 
     if not enforce: 
         if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
-        print('[FINISH BASE]')
+        if verbose: print('[FINISH BASE]')
         return c
 
     for chip_key in c.chips:
@@ -310,10 +311,10 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
             raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
     c.io.gruop_packets_by_io_group = False
-    print('base configuration successfully enforced')
+    if verbose: print('base configuration successfully enforced')
     
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
-    print('[FINISH BASE]')
+    if verbose: print('[FINISH BASE]')
     return c
 
 
