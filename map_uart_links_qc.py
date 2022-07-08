@@ -6,95 +6,10 @@ import larpix
 import larpix.io
 import larpix.logger
 import generate_config
-import base___no_enforce
+import base
 import numpy as np
 
-_uart_phase = 0
-
-_default_controller_config=None
-_default_logger=False
-_default_reset=True
-
-_default_chip_id = 2
-_default_io_channel = 1
-_default_miso_ds = 0
-_default_mosi = 0
-
-_default_clk_ctrl = 1
-
-clk_ctrl_2_clk_ratio_map = {
-		0: 2,
-		1: 4,
-		2: 8,
-		3: 16
-		}
-
-vdda_reg = dict()
-vdda_reg[1] = 0x00024130
-vdda_reg[2] = 0x00024132
-vdda_reg[3] = 0x00024134
-vdda_reg[4] = 0x00024136
-vdda_reg[5] = 0x00024138
-vdda_reg[6] = 0x0002413a
-vdda_reg[7] = 0x0002413c
-vdda_reg[8] = 0x0002413e
-
-vddd_reg = dict()
-vddd_reg[1] = 0x00024131
-vddd_reg[2] = 0x00024133
-vddd_reg[3] = 0x00024135
-vddd_reg[4] = 0x00024137
-vddd_reg[5] = 0x00024139
-vddd_reg[6] = 0x0002413b
-vddd_reg[7] = 0x0002413d
-vddd_reg[8] = 0x0002413f
-
-def get_tile_from_io_channel(io_channel):
-	return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
-
-def get_all_tiles(io_channel_list):
-	tiles = set()
-	for io_channel in io_channel_list:
-		tiles.add( int(get_tile_from_io_channel(io_channel)) )
-	return list(tiles)
-
-def get_reg_pairs(io_channels):
-	tiles = get_all_tiles(io_channels)
-	reg_pairs = []
-	for tile in tiles:
-		reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
-	return reg_pairs
-
-def convert_voltage_for_pacman(voltage):
-	max_voltage, max_scale = 1.8, 46020
-	v = voltage
-	if v > max_voltage: v=max_voltage
-	return int( (v/max_voltage)*max_scale )
-
-def power_registers():
-	adcs=['VDDA', 'IDDA', 'VDDD', 'IDDD']
-	data = {}
-	for i in range(1,9,1):
-		l = []
-		offset = 0
-		for adc in adcs:
-			if adc=='VDDD': offset = (i-1)*32+17
-			if adc=='IDDD': offset = (i-1)*32+16
-			if adc=='VDDA': offset = (i-1)*32+1
-			if adc=='IDDA': offset = (i-1)*32
-			l.append( offset )
-		data[i] = l
-	return data
-
-def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
-	'''
-	Continues to read data until data rate is less than rate_limit
-
-	'''
-	for _ in range(max_iterations):
-		controller.run(runtime, 'flush_data')
-		if len(controller.reads[-1])/runtime <= rate_limit:
-			break
+from base import *
 
 arr = graphs.NumberedArrangement()
 

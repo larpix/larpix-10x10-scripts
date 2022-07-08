@@ -31,6 +31,8 @@ clk_ctrl_2_clk_ratio_map = {
         3: 16
         }
 
+v2a_nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
+
 vdda_reg = dict()
 vdda_reg[1] = 0x00024130
 vdda_reg[2] = 0x00024132
@@ -50,6 +52,24 @@ vddd_reg[5] = 0x00024139
 vddd_reg[6] = 0x0002413b
 vddd_reg[7] = 0x0002413d
 vddd_reg[8] = 0x0002413f
+
+def unique_channel_id(io_group, io_channel, chip_id, channel_id):
+    return channel_id + 100*(chip_id + 1000*(io_channel + 1000*(io_group)))
+
+def from_unique_to_chip_key(unique):
+    io_group = (unique // (100*1000*1000)) % 1000
+    io_channel = (unique // (100*1000)) % 1000
+    chip_id = (unique // 100) % 1000
+    return larpix.Key(io_group, io_channel, chip_id)
+
+def from_unique_to_channel_id(unique):
+    return int(unique) % 100
+
+def from_unique_to_chip_id(unique):
+    return int(unique//100) % 1000
+
+def chip_key_to_string(chip_key):
+    return '-'.join([str(int(chip_key.io_group)),str(int(chip_key.io_channel)),str(int(chip_key.chip_id))])
 
 def get_tile_from_io_channel(io_channel):
     return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
@@ -108,8 +128,69 @@ def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
         if len(controller.reads[-1])/runtime <= rate_limit:
             break
 
+def reset(c, config=None):
+    ##### issue hard reset (resets state machines and configuration memory)
+    if not config is None:
+        new_controller = main(controller_config=config, modify_power=False, verbose=False)
+        return new_controller
+
+    c.io.reset_larpix(length=10240)
+    # resets uart speeds on fpga
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[0], io_group=io_group)
+
+                
+    ##### re-initialize network
+    c.io.group_packets_by_io_group = False # throttle the data rate to insure no FIFO collisions
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            c.init_network(io_group, io_channel, modify_mosi=False)
+
+            
+    ###### set uart speed (v2a at 2.5 MHz transmit clock, v2b fine at 5 MHz transmit clock)
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            chip_keys = c.get_network_keys(io_group,io_channel,root_first_traversal=False)
+            for chip_key in chip_keys:
+                c[chip_key].config.clk_ctrl = _default_clk_ctrl
+                c.write_configuration(chip_key, 'clk_ctrl')
+
+    for io_group, io_channels in c.network.items():
+        for io_channel in io_channels:
+            c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[_default_clk_ctrl], io_group=io_group)
+            #print('io_channel:',io_channel,'factor:',c.io.set_uart_clock_ratio(io_channel, clk_ctrl_2_clk_ratio_map[_default_clk_ctrl], io_group=io_group))
+
+    ##### issue soft reset (resets state machines, configuration memory untouched)
+    c.io.reset_larpix(length=24)
+
+    ##### setup low-level registers to enable loopback
+    chip_config_pairs=[]
+    for chip_key, chip in reversed(c.chips.items()):
+        initial_config = deepcopy(chip.config)
+        c[chip_key].config.vref_dac = 185 # register 82
+        c[chip_key].config.vcm_dac = 41 # register 83
+        c[chip_key].config.adc_hold_delay = 15 # register 129
+        c[chip_key].config.enable_miso_differential = [1,1,1,1] # register 125
+        chip_config_pairs.append((chip_key,initial_config))
+    c.io.double_send_packets = True
+    c.io.gruop_packets_by_io_group = True
+    chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
+    chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
+    flush_data(c)
+
+    #for chip_key in c.chips:
+    #    chip_registers = [(chip_key, i) for i in [82,83,125,129]]
+    #    ok,diff = c.enforce_registers(chip_registers, timeout=0.01, n=10, n_verify=10)
+    #    if not ok:
+    #        raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
+    c.io.double_send_packets = False
+    c.io.gruop_packets_by_io_group = False
+    
+    if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
+    return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, **kwargs):
     print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
@@ -216,6 +297,11 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     flush_data(c)
+
+    if not enforce: 
+        if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
+        print('[FINISH BASE]')
+        return c
 
     for chip_key in c.chips:
         chip_registers = [(chip_key, i) for i in [82,83,125,129]]
