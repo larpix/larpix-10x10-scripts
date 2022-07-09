@@ -503,7 +503,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 
 	print('bad links: ', arr.excluded_links)
 	print('tested', len(arr.good_connections) + len(arr.excluded_links), 'uarts')
-
+	c.io.set_reg(0x00000010, 0, io_group=io_group)
 	return c
 
 if __name__ == '__main__':
@@ -517,5 +517,4 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 	c = main(**vars(args))
 	###### disable tile power
-	c.io.set_reg(0x00000010, 0, io_group=args['io_group'])
 
