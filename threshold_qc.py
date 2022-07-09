@@ -704,6 +704,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     c = main(**vars(args))
     ###### disable tile power
-    for io_g, io_c in c.network.items():
-		c.io.set_reg(0x00000010, 0, io_group=io_g)
+    for io_g, io_c in c.network.items(): c.io.set_reg(0x00000010, 0, io_group=io_g)
 
