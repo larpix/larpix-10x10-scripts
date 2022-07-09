@@ -535,7 +535,7 @@ def save_config_to_file(c, chip_keys, csa_disable, verbose):
     c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     for chip_key in chip_keys:
         time_format = time.strftime('%Y_%m_%d_%H_%S_%Z')
-        config_filename = 'config-'+str(chip_key)+'-'+time_format+'.json'
+        config_filename = tile_id+'-config-'+str(chip_key)+'-'+time_format+'.json'
         c[chip_key].config.write(config_filename, force=True)
         if verbose: print('\t',chip_key,'saved to',config_filename)
     return
@@ -643,9 +643,9 @@ def main(controller_config=_default_controller_config,
                 null_sample_time, set_rate, verbose)
     timeEnd = time.time() - timeStart
     print('==> %.3f seconds --- toggle trim DACs'%timeEnd)
+    tile_id = 'tile-id-' + controller_config.split('-')[2]
 
-    timeStart = time.time()
-    save_config_to_file(c, chip_keys, csa_disable, verbose)
+    save_config_to_file(c, chip_keys, csa_disable, verbose, tile_id)
     timeEnd = time.time()-timeStart
     print('==> %.3f seconds --- saving to json config file \n'%timeEnd)
 
@@ -703,4 +703,7 @@ if __name__ == '__main__':
                         help='''Print to screen debugging output''')
     args = parser.parse_args()
     c = main(**vars(args))
+    ###### disable tile power
+    for io_g, io_c in c.network.items():
+		c.io.set_reg(0x00000010, 0, io_group=io_g)
 

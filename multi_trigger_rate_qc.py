@@ -326,7 +326,7 @@ def chip_key_string(chip_key):
     return '-'.join([str(int(chip_key.io_group)),str(int(chip_key.io_channel)),str(int(chip_key.chip_id))])
 
               
-def save_do_not_enable_list(forbidden):
+def save_do_not_enable_list(forbidden,tile_id):
     d = {}
     for p in forbidden:
         #ck = chip_key_string(p[0])
@@ -335,7 +335,7 @@ def save_do_not_enable_list(forbidden):
         if ck not in d: d[ck]=[]
         if p[1] not in d[ck]: d[ck].append(p[1])        
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    with open('trigger-rate-DO-NOT-ENABLE-channel-list-'+now+'.json','w') as outfile:
+    with open(tile_id+'trigger-rate-DO-NOT-ENABLE-channel-list-'+now+'.json','w') as outfile:
         json.dump(d, outfile, indent=4)
         return 
 
@@ -345,6 +345,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
 
     c = base.main(controller_config, enforce=False)
     chips_to_test = c.chips.keys()
+    tile_id = 'tile-id-' + controller_config.split('-')[2]
     if not chip_key is None: chips_to_test = [chip_key]
     print('chips to test: ',chips_to_test)
     print('==> \tfound ASICs to test')
@@ -393,7 +394,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
             print('==> \tdo not enable list updated with ',n_final-n_initial,' additional channels')
     
     if not low_dac_asic_test: 
-        save_do_not_enable_list(forbidden)
+        save_do_not_enable_list(forbidden,tile_id)
         return c
 
     print('\n========= Performing low Global threshold trigger rate test ============\n')
@@ -408,7 +409,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
     n_final=len(forbidden)
     print('==> \tdo not enable list updated with ',n_final-n_initial,' additional channels')
 
-    save_do_not_enable_list(forbidden)
+    save_do_not_enable_list(forbidden,tile_id)
     print('END ITERATIVE TRIGGER RATE TEST')
     return c
 
@@ -424,4 +425,7 @@ if __name__ == '__main__':
     parser.add_argument('--low_dac_asic_test',default=_default_low_dac_asic_test,action='store_true',help='''Flag to perform low dac asic test''')
     args = parser.parse_args()
     c = main(**vars(args))
+    ###### disable tile power
+    for io_g, io_c in c.network.items():
+		c.io.set_reg(0x00000010, 0, io_group=io_g)
 

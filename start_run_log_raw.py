@@ -72,12 +72,14 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     print('Wait 3 seconds for cooling the ASICs...')
     time.sleep(3)
 
+    tile_id = 'tile-id-' + controller_config.split('-')[2]
+
     c.io.disable_packet_parsing = True
     while True:
         counter = 0
         last_count = 0
         c.io.enable_raw_file_writing = True
-        c.io.raw_filename = time.strftime(c.io.default_raw_filename_fmt)
+        c.io.raw_filename = tile_id + '-' + time.strftime(c.io.default_raw_filename_fmt)
         c.io.join()
         rhdf5.to_rawfile(filename=c.io.raw_filename, io_version=pacman_msg_fmt.latest_version)
         print('new run file at ',c.io.raw_filename)
@@ -112,3 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('--disabled_channels', default=_default_disabled_channels, type=json.loads, help='''json-formatted dict of <chip key>:[<channels>] you'd like disabled''')
     args = parser.parse_args()
     c = main(**vars(args))
+    ###### disable tile power
+    for io_g, io_c in c.network.items():
+		c.io.set_reg(0x00000010, 0, io_group=io_g)
+

@@ -258,7 +258,8 @@ def main(controller_config=_default_controller_config,
 
     disabled_channels = dict()
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
-    ped_fname="pedestal_%s" % now
+    tile_id = 'tile-id-' + controller_config.split('-')[2]
+    ped_fname=tile_id+"-pedestal_%s" % now
     if disabled_list:
         print('applying disabled list: ',disabled_list)
         with open(disabled_list,'r') as f: disabled_channels = json.load(f)
@@ -325,4 +326,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     c = main(**vars(args))
+    ###### disable tile power
+    for io_g, io_c in c.network.items():
+		c.io.set_reg(0x00000010, 0, io_group=io_g)
 
