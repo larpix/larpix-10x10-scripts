@@ -192,7 +192,7 @@ def reset(c, config=None, enforce=False, verbose=False, modify_power=False):
     return c
         
 def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, verbose=True, modify_power=True, **kwargs):
-    print('[START BASE]')
+    if verbose: print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
     c.io = larpix.io.PACMAN_IO(relaxed=True)
