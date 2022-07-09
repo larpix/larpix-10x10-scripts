@@ -82,8 +82,8 @@ def measure_background_rate_disable_csa(c, extreme_edge_chip_keys, csa_disable,
         c.reads = []
         if count == 0: flag = False
         #else:
-        #    for chip in c.chips:
-        #        c.write_configuration(chip_key,'channel_mask')
+        #   for chip in c.chips:
+        #      c.write_configuration(chip_key,'channel_mask')
 
     return csa_disable
 
@@ -190,8 +190,8 @@ def find_mode(l):
 def enable_frontend(c, channels, csa_disable, config):
     chip_register_pairs = []
     #for chip in c.chips:
-    #    ok,diff = c.verify_registers([(chip, list(range(131,139))+list(range(66,74)))], timeout=0.1, n=3)
-    #    if not ok: print('config error:', diff)
+    #   ok,diff = c.verify_registers([(chip, list(range(131,139))+list(range(66,74)))], timeout=0.1, n=3)
+    #   if not ok: print('config error:', diff)
     for io_group, io_channels in c.network.items():
         for io_channel in io_channels:
             for chip_key in c.get_network_keys(io_group,io_channel,root_first_traversal=False):
@@ -239,11 +239,11 @@ def enable_frontend(c, channels, csa_disable, config):
                     #c[pair[0]].config.threshold_global + 1))
                     c[pair[0]].config.threshold_global + 1))
                 #if sum(fifo_half)!=0:
-                #    c[pair[0]].config.load_config_defaults = 1
-                #    c.write_configuration(pair[0], 'load_config_defaults')
-                #    c.write_configuration(pair[0], 'load_config_defaults')
-                #    c[pair[0]].config.load_config_defaults = 0
-                #    print('---- ISSURING A SOFTWARE RESET ----')
+                #   c[pair[0]].config.load_config_defaults = 1
+                #   c.write_configuration(pair[0], 'load_config_defaults')
+                #   c.write_configuration(pair[0], 'load_config_defaults')
+                #   c[pair[0]].config.load_config_defaults = 0
+                #   print('---- ISSURING A SOFTWARE RESET ----')
                 c[pair[0]].config.threshold_global += 1
                 registers = [123, 64]
                 c.write_configuration(pair[0], registers)
@@ -258,8 +258,8 @@ def enable_frontend(c, channels, csa_disable, config):
     #c.multi_write_configuration(chip_register_pairs, connection_delay=0.001)
     #print('verifying config')
     #for chip_key in c.chips:
-    #    ok,diff = c.enforce_registers([(chip_key, list(range(131, 139))+list(range(66,74)))], timeout=0.1, n=3, n_verify=3)
-    #    if not ok: print('config error:', diff)
+    #   ok,diff = c.enforce_registers([(chip_key, list(range(131, 139))+list(range(66,74)))], timeout=0.1, n=3, n_verify=3)
+    #   if not ok: print('config error:', diff)
 
 def find_global_dac_seed(c, pedestal_chip, normalization, cryo, vdda, verbose):
     global_dac_lsb = vdda/256.

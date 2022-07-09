@@ -2,9 +2,6 @@ import larpix
 import larpix.io
 import larpix.logger
 import base
-import base___no_enforce
-
-from base___no_enforce import power_registers
 
 import argparse
 import json
@@ -27,59 +24,7 @@ _default_noise_cut_value=10.
 _default_no_apply_noise_cut=False
 _default_no_refinement=False
 
-vdda_reg = dict()
-vdda_reg[1] = 0x00024130
-vdda_reg[2] = 0x00024132
-vdda_reg[3] = 0x00024134
-vdda_reg[4] = 0x00024136
-vdda_reg[5] = 0x00024138
-vdda_reg[6] = 0x0002413a
-vdda_reg[7] = 0x0002413c
-vdda_reg[8] = 0x0002413e
-
-vddd_reg = dict()
-vddd_reg[1] = 0x00024131
-vddd_reg[2] = 0x00024133
-vddd_reg[3] = 0x00024135
-vddd_reg[4] = 0x00024137
-vddd_reg[5] = 0x00024139
-vddd_reg[6] = 0x0002413b
-vddd_reg[7] = 0x0002413d
-vddd_reg[8] = 0x0002413f
-
-def get_tile_from_io_channel(io_channel):
-    return np.floor( (io_channel-1-((io_channel-1)%4))/4+1)
-
-def get_all_tiles(io_channel_list):
-    tiles = set()
-    for io_channel in io_channel_list:
-        tiles.add( int(get_tile_from_io_channel(io_channel)) )
-    return list(tiles)
-
-def get_reg_pairs(io_channels):
-    tiles = get_all_tiles(io_channels)
-    reg_pairs = []
-    for tile in tiles:
-        reg_pairs.append( (vdda_reg[tile], vddd_reg[tile]) )
-    return reg_pairs
-
-
-def set_pacman_power(c, vdda=46020, vddd=40605):
-    for _io_group, io_channels in c.network.items():
-        active_io_channels = []
-        for io_channel in io_channels:
-            active_io_channels.append(io_channel)
-        reg_pairs = get_reg_pairs(active_io_channels)
-        for pair in reg_pairs:
-            c.io.set_reg(pair[0], vdda, io_group=_io_group)
-            c.io.set_reg(pair[1], vddd, io_group=_io_group)
-        tiles = get_all_tiles(active_io_channels)
-        bit_string = list('00000000')
-        for tile in tiles: bit_string[-1*tile] = '1'
-        c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
-        c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
-    time.sleep(0.1)
-
+from base import *
 
 def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     c.io.group_packets_by_io_group = True
@@ -108,7 +53,7 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     chip_register_pairs = c.differential_write_configuration(chip_config_pairs, write_read=0, connection_delay=0.01)
     base.flush_data(c)
-    #base___no_enforce.flush_data(c)
+    #base.flush_data(c)
 
     print('enforcing correct configuration...')
     ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
@@ -132,7 +77,7 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     c.multi_write_configuration(chip_register_pairs)
     c.multi_write_configuration(chip_register_pairs)
     base.flush_data(c)
-    #base___no_enforce.flush_data(c)
+    #base.flush_data(c)
 
     print('enforcing correct configuration...')
     ok,diff = c.enforce_configuration(list(c.chips.keys()), timeout=0.01, connection_delay=0.01, n=10, n_verify=10)
@@ -273,11 +218,11 @@ def main(controller_config=_default_controller_config,
     print('initial disabled list: ',disabled_channels)
 
     c = base.main(controller_config=controller_config, logger=True, filename=ped_fname, vdda=0)
-    #c = base___no_enforce.main(controller_config=controller_config, logger=True, filename=ped_fname)
+    #c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
     configure_pedestal(c, periodic_trigger_cycles, disabled_channels)
     print('Wait 3 seconds for cooling the ASICs...'); time.sleep(3)
     base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
-    #base___no_enforce.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
+    #base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
     run_pedestal(c, runtime)
 
     revised_disabled_channels = defaultdict(list)
@@ -291,11 +236,11 @@ def main(controller_config=_default_controller_config,
     if no_refinement==False:
         ped_fname="recursive_pedestal_%s.h5" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname, vdda=0)
-        #c = base___no_enforce.main(controller_config=controller_config, logger=True, filename=ped_fname)
+        #c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
         print('Wait 3 seconds for cooling the ASICs...'); time.sleep(3)
         base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
-        #base___no_enforce.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
+        #base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
         run_pedestal(c, runtime)
 
     revised_bad_channel_filename=None
