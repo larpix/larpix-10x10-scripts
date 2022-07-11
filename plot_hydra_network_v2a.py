@@ -48,7 +48,7 @@ def start_end(chipID, uart, chipid_pos):
 
 
 
-def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile):
+def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group):
     with open(geometry_yaml) as fi: geo = yaml.full_load(fi)
     chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
     vertical_lines=np.linspace(-1*(geo['width']/2), geo['width']/2, 11)
@@ -107,8 +107,8 @@ def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_ti
                            color='r', alpha=0.2)
             plt.gca().add_patch( r )
 
-    plt.title('Tile ID '+str(tile_id)+'\n (PACMAN tile '+str(pacman_tile)+')')
-    plt.show()
+    plt.title('Tile ID '+str(tile_id)+'\n (PACMAN tile '+str(pacman_tile)+', IO group '+str(io_group)+')')
+    plt.savefig('hydra-network-tile-id-'+str(tile_id)+'.png')
 
 
     
@@ -121,7 +121,7 @@ def main(network_json=_default_network_json, geometry_yaml=_default_geometry_yam
     pacman_tile = network_json.split('-')[5]
     
     chipID_uart, missingIO = parse_hydra_network(network_json, io_group)
-    plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile)
+    plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group)
 
 
     

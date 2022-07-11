@@ -27,17 +27,17 @@ _default_low_dac_asic_test = False
 rate_cut=[10000,1000]#,100] #,10]
 suffix = ['no_cut','10kHz_cut','1kHz_cut','100Hz_cut']
 
-def initial_setup(ctr, controller_config):
+def initial_setup(ctr, controller_config, tile_id):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    fname="trigger_rate_%s_" % suffix[ctr] #str(rate_cut[ctr])
-    fname=fname+str(now)+".h5"
+    fname="-trigger_rate_%s_" % suffix[ctr] #str(rate_cut[ctr])
+    fname=tile_id+fname+str(now)+".h5"
     c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
-def initial_setup_low_dac(controller_config):
+def initial_setup_low_dac(controller_config, tile_id):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    fname="low_thresh_trigger_rate_"#str(rate_cut[ctr])
-    fname=fname+str(now)+".h5"
+    fname="-low_thresh_trigger_rate_"#str(rate_cut[ctr])
+    fname=tile_id+fname+str(now)+".h5"
     c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
@@ -374,7 +374,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
             if ithr > 1: enforce_initial = True
             if ithr==0: this_it_runtime=runtime/2
             for ctr in range(len(rate_cut)):
-                c, fname = initial_setup(ctr, controller_config)
+                c, fname = initial_setup(ctr, controller_config, tile_id)
                 print('==> \ttesting ASICs with ',rate_cut[ctr],' Hz trigger rate threshold, Global DAC', thr)
                 asic_test(c, chips_to_test, forbidden, thr, this_it_runtime, enforce_initial, controller_config)
                 if ctr==3: continue
@@ -384,7 +384,7 @@ def main(controller_config=_default_controller_config, chip_key=_default_chip_ke
                 print('==> \tdo not enable list updated with ',n_final-n_initial,' additional channels')
     elif isinstance(threshold, int):
         for ctr in range(len(rate_cut)):
-            c, fname = initial_setup(ctr, controller_config)
+            c, fname = initial_setup(ctr, controller_config, tile_id)
             print('==> \ttesting ASICs with ',rate_cut[ctr],' Hz trigger rate threshold, Global DAC', threshold)
             enforce_initial = True
             asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial)
