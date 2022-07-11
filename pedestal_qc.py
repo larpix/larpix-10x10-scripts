@@ -208,6 +208,7 @@ def main(controller_config=_default_controller_config,
             print(f[key])
         except:
             continue
+            
     #f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
     f.close()
 

@@ -336,7 +336,7 @@ def save_do_not_enable_list(forbidden,tile_id):
         if ck not in d: d[ck]=[]
         if p[1] not in d[ck]: d[ck].append(p[1])        
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    with open(tile_id+'trigger-rate-DO-NOT-ENABLE-channel-list-'+now+ '_v' + str(base.LARPIX_10X10_SCRIPTS_VERSION)  +'.json','w') as outfile:
+    with open(tile_id+'-trigger-rate-DO-NOT-ENABLE-channel-list-'+now+ '_v' + str(base.LARPIX_10X10_SCRIPTS_VERSION)  +'.json','w') as outfile:
         json.dump(d, outfile, indent=4)
         return 
 
