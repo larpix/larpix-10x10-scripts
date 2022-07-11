@@ -132,7 +132,7 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
         if flag==True:
             n_bad_channels+=1
             _chip_key_ = from_unique_to_chip_key(unique)
-            _chip_key_string_ = chip_key_string(_chip_key_)
+            _chip_key_string_ = chip_key_to_string(_chip_key_)
             if _chip_key_ in record: record[_chip_key_string_]=[]
             record[_chip_key_string_].append( from_unique_to_channel_id(unique) )
             print(_chip_key_,'  ', (unique % 100),'\t disabled')
