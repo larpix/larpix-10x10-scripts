@@ -12,7 +12,7 @@ _paths = None
 _io_group = 1
 
 
-_header = {"_config_type": "controller", "layout": "2.5.0", "network" : {str(_io_group) : {}}}
+_header = {"_config_type": "controller", "layout": "2.4.0", "network" : {str(_io_group) : {}}}
 
 
 
