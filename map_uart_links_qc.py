@@ -107,10 +107,10 @@ def get_initial_controller(io_group, io_channels, vdda=0, pacman_version='v1rev3
 		power = power_registers()
 		adc_read = 0x00024001
 		for i in power.keys():
-			val_vdda = c.io.get_reg(adc_read+power[i][0], io_group=1)
-			val_idda = c.io.get_reg(adc_read+power[i][1], io_group=1)
-			val_vddd = c.io.get_reg(adc_read+power[i][2], io_group=1)
-			val_iddd = c.io.get_reg(adc_read+power[i][3], io_group=1)
+			val_vdda = c.io.get_reg(adc_read+power[i][0], io_group=io_group)
+			val_idda = c.io.get_reg(adc_read+power[i][1], io_group=io_group)
+			val_vddd = c.io.get_reg(adc_read+power[i][2], io_group=io_group)
+			val_iddd = c.io.get_reg(adc_read+power[i][3], io_group=io_group)
 			print('TILE',i,
 				  '\tVDDA:',(((val_vdda>>16)>>3)*4),
 				  '\tIDDA:',(((val_idda>>16)-(val_idda>>31)*65535)*500*0.01),
