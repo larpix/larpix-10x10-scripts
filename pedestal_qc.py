@@ -179,16 +179,16 @@ def main(controller_config=_default_controller_config,
     disabled_channels = dict()
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
     tile_id = 'tile-id-' + controller_config.split('-')[2]
-    ped_fname=tile_id+"-pedestal_%s" % now
+    ped_fname="-pedestal_%s" % now
     if disabled_list:
         print('applying disabled list: ',disabled_list)
         with open(disabled_list,'r') as f: disabled_channels = json.load(f)
-        ped_fname=ped_fname+"____"+str(disabled_list.split(".json")[0])
+        ped_fname=tile_id+ped_fname+"____"+str(disabled_list.split(".json")[0])
     else:
         nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57] # channels NOT routed out to pixel pads for LArPix-v2
         disabled_channels["All"]=nonrouted_channels
         print('No disabled list applied. Using the default bad channels list.')
-        ped_fname=ped_fname+"____default_bad_channels"
+        ped_fname=tile_id+ped_fname+"____default_bad_channels"
     ped_fname= ped_fname+".h5"
     print('initial disabled list: ',disabled_channels)
 
@@ -209,7 +209,7 @@ def main(controller_config=_default_controller_config,
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     if no_refinement==False:
-        ped_fname="recursive_pedestal_%s.h5" % revised_bad_channel_filename
+        ped_fname=tile_id+"recursive_pedestal_%s.h5" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname, vdda=0)
         #c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)

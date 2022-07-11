@@ -10,8 +10,7 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 
 _default_filename=None
-_default_geometry_yaml='layout-2.4.0.yaml'
-_default_title=None
+_default_geometry_yaml='../layout-2.4.0.yaml'
 _default_metric='mean'
 
 pitch=4.4 # mm
@@ -51,7 +50,7 @@ def find_chip_id(u): return (u//64) % 256
 
 
 
-def plot_1d(d, metric, title):
+def plot_1d(d, metric):
     fig, ax = plt.subplots(figsize=(8,8))
     a = [d[key][metric] for key in d.keys()]
     min_bin = int(min(a))-1
@@ -63,7 +62,7 @@ def plot_1d(d, metric, title):
     if metric=='std': ax.set_xlabel('ADC RMS')
     if metric=='rate': ax.set_xlabel('Trigger Rate')
     ax.set_ylabel('Channel Count')
-    ax.set_title(title)
+#    ax.set_title(title)
     plt.show()
 
 
@@ -117,13 +116,11 @@ def plot_xy(d, metric, title, geometry_yaml, normalization):
     if metric=='mean': ax.set_title(title+'\nADC Mean')
     if metric=='std': ax.set_title(title+'\nADC RMS')
     if metric=='rate': ax.set_title(title+'\nTrigger Rate')
-    plt.show()
-
+    plt.savefig(title+'.png')
 
     
 def main(filename=_default_filename,
          geometry_yaml=_default_geometry_yaml,
-         title=_default_title,
          metric=_default_metric,
          **kwargs):
 
@@ -132,9 +129,9 @@ def main(filename=_default_filename,
     normalization=50
     if metric=='std': normalization=5
     if metric=='rate': normalization=10
-    plot_xy(d, metric, title, geometry_yaml, normalization)
+    plot_xy(d, metric, geometry_yaml, normalization)
 
-    plot_1d(d, metric, title)
+    plot_1d(d, metric)
 
 
     
@@ -142,7 +139,6 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--filename', default=_default_filename, type=str, help='''HDF5 fielname''')
     parser.add_argument('--geometry_yaml', default=_default_geometry_yaml, type=str, help='''geometry yaml file (layout 2.4.0 for LArPix-v2a 10x10 tile)''')
-    parser.add_argument('--title', default=_default_title, type=str, help='''plot title''')
     parser.add_argument('--metric', default=_default_metric, type=str, help='''metric to plot; options: 'mean', 'std', 'rate' ''')
     args = parser.parse_args()
     main(**vars(args))
