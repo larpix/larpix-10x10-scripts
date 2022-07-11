@@ -51,7 +51,7 @@ def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
     for hl in horizontal_lines:
         ax.hlines(y=hl, xmin=vertical_lines[0], xmax=vertical_lines[-1], colors=['k'], linestyle='dotted')
 
-    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
+    plt.text(0.95,1.01,'LArPix version '+str(version), ha='center', va='center', transform=ax.transAxes)
     chipid_pos = dict()
     for chipid in chip_pix.keys():
         x,y = [[] for i in range(2)]
