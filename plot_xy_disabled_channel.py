@@ -22,7 +22,9 @@ def parse_file(filename):
     with open(filename,'r') as f:
         data = json.load(f)
         for key in data.keys():
-            if key=="larpix-scripts-version": version = data[key]; print(version); continue
+            if key=="larpix-scripts-version":
+                version = data[key];
+                continue
             chip_id = int(key.split('-')[-1])
             for i in data[key]:
                 if i not in nonrouted_v2a_channels and i<=63:
@@ -90,7 +92,6 @@ def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
     ax.set_title('Tile ID '+str(tile_id))
     if trigger_count!=0 and pedestal_count==0:
         ax.set_title('Tile ID '+str(tile_id)+'\n'+str(trigger_count)+' trigger rate disabled channels (red)')
-        print('Tile ID '+str(tile_id)+'\n'+str(trigger_count)+' trigger rate disabled channels (red)')
     if trigger_count==0 and pedestal_count!=0:
         ax.set_title('Tile ID '+str(tile_id)+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
     if trigger_count!=0 and pedestal_count!=0:
@@ -126,18 +127,18 @@ def main(trigger_disabled=_default_trigger_disabled,
         trigger_id = trigger_disabled.split('-')[2]
     pedestal_dict={}; pedestal_id=None
     if pedestal_disabled!=None:
-        pedestal_dict,
-        trigger_dict, version = parse_file(pedestal_disabled)
+        pedestal_dict, version = parse_file(pedestal_disabled)
         pedestal_id = pedestal_disabled.split('-')[2]
+
+    if trigger_id!=None: tile_id = trigger_id
+    else: tile_id = pedestal_id
+        
     if trigger_disabled!=None and pedestal_disabled!=None:
         pedestal_dict = refine_dict(trigger_dict, pedestal_dict)
         if trigger_id != pedestal_id:
             print('Disabled lists from different tile IDs. Exiting')
             return
-
-    if trigger_id!=None: tile_id = trigger_id
-    else: tile_id = pedestal_id
-    print(version)
+        
     plot_xy(trigger_dict, pedestal_dict, tile_id, geometry_yaml, version)
 
 
