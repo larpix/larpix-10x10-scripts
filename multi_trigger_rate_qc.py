@@ -328,6 +328,7 @@ def chip_key_string(chip_key):
               
 def save_do_not_enable_list(forbidden,tile_id):
     d = {}
+    d['larpix-scripts-version'] = base.LARPIX_10X10_SCRIPTS_VERSION
     for p in forbidden:
         #ck = chip_key_string(p[0])
         ck = str(p[0])
@@ -335,7 +336,7 @@ def save_do_not_enable_list(forbidden,tile_id):
         if ck not in d: d[ck]=[]
         if p[1] not in d[ck]: d[ck].append(p[1])        
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    with open(tile_id+'trigger-rate-DO-NOT-ENABLE-channel-list-'+now+'.json','w') as outfile:
+    with open(tile_id+'trigger-rate-DO-NOT-ENABLE-channel-list-'+now+ '_v' + string(base.LARPIX_10X10_SCRIPTS_VERSION)  +'.json','w') as outfile:
         json.dump(d, outfile, indent=4)
         return 
 

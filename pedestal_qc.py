@@ -11,6 +11,7 @@ import h5py
 import numpy as np
 from collections import defaultdict
 
+from base import *
 
 _default_controller_config=None
 _default_periodic_trigger_cycles=100000
@@ -88,32 +89,6 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
     set_pacman_power(c, vdda=46020)
 
 
-
-def unique_channel_id(io_group, io_channel, chip_id, channel_id): return channel_id + 100*(chip_id + 1000*(io_channel + 1000*(io_group)))
-
-
-
-def from_unique_to_chip_id(unique): return (int(unique)//100)%1000
-
-
-
-def from_unique_to_channel_id(unique): return int(unique) % 100
-
-
-
-def from_unique_to_chip_key(unique):
-    io_group = (unique // (100*1000*1000)) % 1000
-    io_channel = (unique // (100*1000)) % 1000
-    chip_id = (unique // 100) % 1000
-    return larpix.Key(io_group, io_channel, chip_id)
-
-
-
-def chip_key_string(chip_key):
-    return '-'.join([str(int(chip_key.io_group)),str(int(chip_key.io_channel)),str(int(chip_key.chip_id))])
-
-
-
 def run_pedestal(c, runtime):
     print('START PEDESTAL RUN')
     c.logger.enable()
@@ -171,11 +146,10 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
 
 def save_simple_json(record):
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
-    with open('pedestal-bad-channels-'+now+'.json','w') as outfile:
+    record['larpix-scripts-version'] = base.LARPIX_10X10_SCRIPTS_VERSION
+    with open('pedestal-bad-channels-'+now++ '_v' + string(base.LARPIX_10X10_SCRIPTS_VERSION)'.json','w') as outfile:
         json.dump(record, outfile, indent=4)
         return now
-
-
 
 def main(controller_config=_default_controller_config,
          periodic_trigger_cycles=_default_periodic_trigger_cycles,

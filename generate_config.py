@@ -62,7 +62,7 @@ def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_con
 	jsonFile.write(jsonString)
 	jsonFile.close()
 
-def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown'):
+def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown', script_version='unknown'):
 	if paths is None: raise RuntimeError('No existing hydra networks specified with paths keyword')
 	na = graphs.NumberedArrangement()
 	missing_chips = []
@@ -76,6 +76,7 @@ def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections
 		root_connection = path[0]
 		_header['name'] = _name
 		_header['asic_version'] = asic_version
+		_header['larpix-scripts-version'] = script_version
 		_header['bad_uart_links'] = list(_excluded_links)
 		_header['excluded_chips'] = list(_excluded_chips)+missing_chips #chips explicitly excluded
 

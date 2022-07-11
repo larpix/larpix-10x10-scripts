@@ -483,7 +483,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	_name = 'tile-' + tile_name + "-pacman-tile-"+str(pacman_tile)+"-hydra-network"
 	if True:
 		print('writing configuration', _name + '.json, including', sum(  [len(path) for path in paths] ), 'chips'  )
-		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2)
+		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
 
 	##
 	##

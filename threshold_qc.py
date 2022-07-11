@@ -542,7 +542,7 @@ def save_config_to_file(c, chip_keys, csa_disable, verbose):
 
 def save_stats(record):
     time_format = time.strftime('%Y_%m_%d_%H_%S_%Z')
-    with open('config-record-'+time_format+'.json', 'w') as outfile:
+    with open('config-record-'+time_format++ '_v' + string(base.LARPIX_10X10_SCRIPTS_VERSION)'.json', 'w') as outfile:
         json.dump(record, outfile, indent=4)
 
 def main(controller_config=_default_controller_config,
