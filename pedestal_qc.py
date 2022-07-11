@@ -202,7 +202,12 @@ def main(controller_config=_default_controller_config,
     f = h5py.File(ped_fname, 'w')
     print(f.keys())
     for key in f.keys():
-        print(f[key])
+        print(key)
+    for key in f.keys():
+        try:
+            print(f[key])
+        except:
+            continue
     #f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
     f.close()
 
