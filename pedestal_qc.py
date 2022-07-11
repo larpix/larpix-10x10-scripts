@@ -200,7 +200,10 @@ def main(controller_config=_default_controller_config,
     #base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
     run_pedestal(c, runtime)
     f = h5py.File(ped_fname, 'w')
-    f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
+    print(f.keys())
+    for key in f.keys():
+        print(f[key])
+    #f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
     f.close()
 
     revised_disabled_channels = defaultdict(list)
