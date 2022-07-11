@@ -19,12 +19,13 @@ nonrouted_v2a_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
 
 
 def parse_file(filename):
-    d = {}; version=Null
+    d = {}; version=None
     with open(filename,'r') as f:
         data = json.load(f)
         for key in data.keys():
-            chip_id = int(key.split('-')[-1])
+            chip_id = key.split('-')[-1]
             if chip_id=='version': version = data[key]; continue
+            chip_id = int(chip_id)
             for i in data[key]:
                 if i not in nonrouted_v2a_channels and i<=63:
                     if chip_id not in d: d[chip_id] = []
@@ -33,7 +34,7 @@ def parse_file(filename):
 
 
     
-def plot_xy(trigger, pedestal, title, geometry_yaml):
+def plot_xy(trigger, pedestal, title, geometry_yaml, version):
     with open(geometry_yaml) as fi: geo = yaml.full_load(fi)
     chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
     vertical_lines=np.linspace(-1*(geo['width']/2), geo['width']/2, 11)
@@ -52,6 +53,7 @@ def plot_xy(trigger, pedestal, title, geometry_yaml):
     for hl in horizontal_lines:
         ax.hlines(y=hl, xmin=vertical_lines[0], xmax=vertical_lines[-1], colors=['k'], linestyle='dotted')
 
+    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
     chipid_pos = dict()
     for chipid in chip_pix.keys():
         x,y = [[] for i in range(2)]
@@ -121,15 +123,16 @@ def main(trigger_disabled=_default_trigger_disabled,
         print('Provide a plot title with --title command line argument. \nExiting')
         return
 
+    version=None
     trigger_dict={}
-    if trigger_disabled!=None: trigger_dict = parse_file(trigger_disabled)
+    if trigger_disabled!=None: trigger_dict, version = parse_file(trigger_disabled)
     
     pedestal_dict={}
-    if pedestal_disabled!=None: pedestal_dict = parse_file(pedestal_disabled)
+    if pedestal_disabled!=None: pedestal_dict, version = parse_file(pedestal_disabled)
     
     if trigger_disabled!=None and pedestal_disabled!=None: pedestal_dict = refine_dict(trigger_dict, pedestal_dict)
 
-    plot_xy(trigger_dict, pedestal_dict, title, geometry_yaml)
+    plot_xy(trigger_dict, pedestal_dict, title, geometry_yaml, version)
 
 
     
