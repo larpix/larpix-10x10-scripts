@@ -92,7 +92,7 @@ def configure_pedestal(c, periodic_trigger_cycles, disabled_channels):
 def run_pedestal(c, runtime):
     print('START PEDESTAL RUN')
     c.logger.enable()
-    c.run(runtime, 'collect data')
+    c.run(runtime, 'collect pedestal, version ' + str(base.LARPIX_10X10_SCRIPTS_VERSION))
     c.logger.flush()
     print('packets read',len(c.reads[-1]))
     c.logger.disable()
@@ -204,7 +204,7 @@ def main(controller_config=_default_controller_config,
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-      #  revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
+        revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     if no_refinement==False:

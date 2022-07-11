@@ -104,7 +104,7 @@ def asic_test(c, chips_to_test, forbidden, threshold, runtime, enforce_initial, 
 
         base.flush_data(c)
         c.logger.enable()
-        c.run(runtime,'collect data')
+        c.run(runtime,'collect data, ' + str(base.LARPIX_10X10_SCRIPTS_VERSION) )
         c.logger.flush()
         c.logger.disable()
 
