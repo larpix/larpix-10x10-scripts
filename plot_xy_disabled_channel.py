@@ -11,7 +11,6 @@ from matplotlib.colors import Normalize
 
 _default_trigger_disabled=None
 _default_pedestal_disabled=None
-_default_title=None
 _default_geometry_yaml='layout-2.4.0.yaml'
 
 pitch=4.4*0.99 # mm
@@ -34,7 +33,7 @@ def parse_file(filename):
 
 
     
-def plot_xy(trigger, pedestal, title, geometry_yaml, version):
+def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
     with open(geometry_yaml) as fi: geo = yaml.full_load(fi)
     chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
     vertical_lines=np.linspace(-1*(geo['width']/2), geo['width']/2, 11)
@@ -89,14 +88,14 @@ def plot_xy(trigger, pedestal, title, geometry_yaml, version):
             r = Rectangle( ( x-(pitch/2.), y-(pitch/2.) ), pitch, pitch, color='orange', alpha=weight )
             plt.gca().add_patch( r )
 
-    ax.set_title(title)
+    ax.set_title('Tile ID '+str(tile_id))
     if trigger_count!=0 and pedestal_count==0:
-        ax.set_title(title+'\n'+str(trigger_count)+' trigger rate disabled channels (red)')
+        ax.set_title('Tile ID '+str(tile_id)+'\n'+str(trigger_count)+' trigger rate disabled channels (red)')
     if trigger_count==0 and pedestal_count!=0:
-        ax.set_title(title+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
+        ax.set_title('Tile ID '+str(tile_id)+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
     if trigger_count!=0 and pedestal_count!=0:
-        ax.set_title(title+'\n'+str(trigger_count)+' trigger rate disabled channels (red)'+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
-    plt.savefig(title+'.png')
+        ax.set_title('Tile ID '+str(tile_id)+'\n'+str(trigger_count)+' trigger rate disabled channels (red)'+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
+    plt.savefig('disabled-xy-map-tile-id-'+str(tile_id)+'.png')
 
 
     
@@ -117,22 +116,29 @@ def refine_dict(trigger, pedestal):
 def main(trigger_disabled=_default_trigger_disabled,
          pedestal_disabled=_default_pedestal_disabled,
          geometry_yaml=_default_geometry_yaml,
-         title=_default_title,
          **kwargs):
-    if title==None:
-        print('Provide a plot title with --title command line argument. \nExiting')
-        return
-
+    
     version=None
-    trigger_dict={}
-    if trigger_disabled!=None: trigger_dict, version = parse_file(trigger_disabled)
     
-    pedestal_dict={}
-    if pedestal_disabled!=None: pedestal_dict, version = parse_file(pedestal_disabled)
-    
-    if trigger_disabled!=None and pedestal_disabled!=None: pedestal_dict = refine_dict(trigger_dict, pedestal_dict)
+    trigger_dict={}; trigger_id=None
+    if trigger_disabled!=None:
+        trigger_dict, version = parse_file(trigger_disabled)
+        trigger_id = trigger_disabled.split('-')[2]
+    pedestal_dict={}; pedestal_id=None
+    if pedestal_disabled!=None:
+        pedestal_dict,
+        version = parse_file(pedestal_disabled)
+        pedestal_id = pedetal_disabled.split('-')[2]
+    if trigger_disabled!=None and pedestal_disabled!=None:
+        pedestal_dict = refine_dict(trigger_dict, pedestal_dict)
+        if trigger_id != pedestal_id:
+            print('Disabled lists from different tile IDs. Exiting')
+            return
 
-    plot_xy(trigger_dict, pedestal_dict, title, geometry_yaml, version)
+    if trigger_id!=None: tile_id = trigger_id
+    else: tile_id = pedestal_id
+    
+    plot_xy(trigger_dict, pedestal_dict, tile_id, geometry_yaml, version)
 
 
     
@@ -141,6 +147,5 @@ if __name__=='__main__':
     parser.add_argument('--trigger_disabled', default=_default_trigger_disabled, type=str, help='''Disabled list from multi_threshold_qc script''')
     parser.add_argument('--pedestal_disabled', default=_default_pedestal_disabled, type=str, help='''Disabled list from pedestal_qc script''')
     parser.add_argument('--geometry_yaml', default=_default_geometry_yaml, type=str, help='''geometry yaml file (layout 2.4.0 for LArPix-2a 10x10 tile)''')
-    parser.add_argument('--title', default=_default_title, type=str, help='''plot title''')
     args = parser.parse_args()
     main(**vars(args))
