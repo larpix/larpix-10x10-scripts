@@ -6,7 +6,7 @@ import json
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 
-_default_network_json=None
+_default_controller_config=None
 _default_io_group=1
 _default_geometry_yaml='layout-2.4.0.yaml'
 
@@ -112,22 +112,22 @@ def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_ti
 
 
     
-def main(network_json=_default_network_json, geometry_yaml=_default_geometry_yaml, io_group=_default_io_group, **kwargs):
-    if network_json==None:
+def main(controller_config=_default_controller_config, geometry_yaml=_default_geometry_yaml, io_group=_default_io_group, **kwargs):
+    if controller_config==None:
         print('Hydra network JSON configuration file missing.\n',
-              '==> Specify with --network_json <filename> commandline argument')
+              '==> Specify with --controller_config <filename> commandline argument')
         return
-    tile_id = network_json.split('-')[2]
-    pacman_tile = network_json.split('-')[5]
+    tile_id = controller_config.split('-')[2]
+    pacman_tile = controller_config.split('-')[5]
     
-    chipID_uart, missingIO = parse_hydra_network(network_json, io_group)
+    chipID_uart, missingIO = parse_hydra_network(controller_config, io_group)
     plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group)
 
 
     
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--network_json', default=_default_network_json, type=str, help='''Hydra network json configuration file''')
+    parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network json configuration file''')
     parser.add_argument('--geometry_yaml', default=_default_geometry_yaml, type=str, help='''geometry yaml (layout 2.4.0 for LArPix-v2a 10x10 tile)''')
     parser.add_argument('--io_group', default=_default_io_group, type=int, help='''PACMAN IO group''')
     args = parser.parse_args()
