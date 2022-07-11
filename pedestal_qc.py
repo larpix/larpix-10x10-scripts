@@ -199,11 +199,6 @@ def main(controller_config=_default_controller_config,
     base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
     #base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
     run_pedestal(c, runtime)
-    f = h5py.File(ped_fname, 'w')
-    print(f.name)
-    print(list(f.keys()))
-    #f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
-    f.close()
 
     revised_disabled_channels = defaultdict(list)
     revised_bad_channel_filename=None
@@ -223,12 +218,6 @@ def main(controller_config=_default_controller_config,
         #base.flush_data(c, rate_limit=(1+1/(periodic_trigger_cycles*1e-7)*len(c.chips)))
         run_pedestal(c, runtime)
         #open file to add version info
-        f = h5py.File(ped_fname, 'w')
-        print(f.name)
-        print(list(f.keys()))
-        #f['_header']['larpix-scripts-version']=base.LARPIX_10X10_SCRIPTS_VERSION
-        f.close()
-
     revised_bad_channel_filename=None
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
