@@ -147,7 +147,7 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
 def save_simple_json(record):
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
     record['larpix-scripts-version'] = base.LARPIX_10X10_SCRIPTS_VERSION
-    with open('pedestal-bad-channels-'+now+ '_v' + string(base.LARPIX_10X10_SCRIPTS_VERSION)'.json','w') as outfile:
+    with open('pedestal-bad-channels-'+now+ '_v' + string(base.LARPIX_10X10_SCRIPTS_VERSION)+'.json','w') as outfile:
         json.dump(record, outfile, indent=4)
         return now
 
