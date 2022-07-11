@@ -19,16 +19,17 @@ nonrouted_v2a_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
 
 
 def parse_file(filename):
-    d = {}
+    d = {}; version=Null
     with open(filename,'r') as f:
         data = json.load(f)
         for key in data.keys():
             chip_id = int(key.split('-')[-1])
+            if chip_id=='version': version = data[key]; continue
             for i in data[key]:
                 if i not in nonrouted_v2a_channels and i<=63:
                     if chip_id not in d: d[chip_id] = []
                     d[chip_id].append(i)
-    return d
+    return d, version
 
 
     

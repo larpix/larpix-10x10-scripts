@@ -145,10 +145,10 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
 
 
 
-def save_simple_json(record):
+def save_simple_json(record, tile_id):
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
     record['larpix-scripts-version'] = base.LARPIX_10X10_SCRIPTS_VERSION
-    with open('pedestal-bad-channels-'+now+ '_v' + str(base.LARPIX_10X10_SCRIPTS_VERSION)+'.json','w') as outfile:
+    with open(tile_id+'-pedestal-bad-channels-'+now+ '_v' + str(base.LARPIX_10X10_SCRIPTS_VERSION)+'.json','w') as outfile:
         json.dump(record, outfile, indent=4)
         return now
 
@@ -205,7 +205,7 @@ def main(controller_config=_default_controller_config,
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-        revised_bad_channel_filename=save_simple_json(revised_disabled_channels)
+        revised_bad_channel_filename=save_simple_json(revised_disabled_channels, tile_id)
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     if no_refinement==False:
