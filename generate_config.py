@@ -9,15 +9,15 @@ _good_root_connections = [11, 41, 71, 101]
 _io_channels =           [21, 22, 23, 24]
 _excluded_links = [ (61, 71), (24, 34), (44, 43), (64, 74), (49, 59), (43, 44), (22, 32)]
 _paths = None
-_io_group = 1
 
 
-_header = {"_config_type": "controller", "layout": "2.4.0", "network" : {str(_io_group) : {}}}
+_header = {"_config_type": "controller", "layout": "2.5.0", "network" : dict()}
 
 
 
 def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown'):
 	_header['name'] = _name
+	_header['network'][str(_io_group)] = dict()
 	nchips_hit = 0
 	na = graphs.NumberedArrangement()
 	for link in _excluded_links:
@@ -37,7 +37,6 @@ def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_con
 		root_connection = _good_root_connections[n]
 		nchips_hit += len(path)
 		print(len(path))
-
 		_header['network'][str(_io_group)][str(_io_channels[n])] = {}
 
 		nodes = [ {"chip_id" : 'ext', "miso_us": [None,None,None,root_connection], "root" : True} ]
@@ -70,16 +69,17 @@ def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections
 		if not any([i in path for path in paths]):
 			missing_chips.append(i)
 
+	_header['name'] = _name
+	_header['asic_version'] = asic_version
+	_header['larpix-scripts-version'] = script_version
+	_header['bad_uart_links'] = list(_excluded_links)
+	_header['excluded_chips'] = list(_excluded_chips)+missing_chips #chips explicitly excluded
+	_header['network'][str(_io_group)] = dict()
+
 	print('Chips missing in hydra network:', missing_chips)
 
 	for n, path in enumerate(paths):
 		root_connection = path[0]
-		_header['name'] = _name
-		_header['asic_version'] = asic_version
-		_header['larpix-scripts-version'] = script_version
-		_header['bad_uart_links'] = list(_excluded_links)
-		_header['excluded_chips'] = list(_excluded_chips)+missing_chips #chips explicitly excluded
-
 		_header['network'][str(_io_group)][str(_io_channels[n])] = {}
 
 		nodes = [ {"chip_id" : 'ext', "miso_us": [None,None,None,root_connection], "root" : True} ]
