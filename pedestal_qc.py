@@ -138,6 +138,7 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
             print(_chip_key_,'  ', (unique % 100),'\t disabled')
 
     for key in disabled_channels.keys():
+        if key=='larpix-scripts-version': continue
         record[key]+=disabled_channels[key]
     
     return record, n_bad_channels
