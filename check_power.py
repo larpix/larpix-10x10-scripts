@@ -101,7 +101,7 @@ def main(io_group=_default_io_group,
 
     ###### disable tile power
     c.io.set_reg(0x00000010, 0, io_group=io_group)
-    
+
     return c
 
 
