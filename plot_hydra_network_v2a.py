@@ -14,8 +14,13 @@ _default_geometry_yaml='layout-2.4.0.yaml'
 
 def parse_hydra_network(network_json, iog):
     chipID_uart, missingIO=[{} for i in range(2)]
+    version=None
     with open(network_json,'r') as f:
         data = json.load(f)
+        for key in data.keys():
+            if key=="larpix-scripts-version":
+                version = data[key]
+                continue
         missingIO=data['bad_uart_links']                    
         mapping=data['network']['miso_us_uart_map']
         hydra=data['network'][str(iog)]
@@ -24,7 +29,7 @@ def parse_hydra_network(network_json, iog):
                 chipID_uart[node['chip_id']]=[]
                 for i in range(len(node['miso_us'])):
                     if node['miso_us'][i]!=None: chipID_uart[node['chip_id']].append(mapping[i])
-    return chipID_uart, missingIO
+    return chipID_uart, missingIO, version
 
 
 
@@ -48,7 +53,7 @@ def start_end(chipID, uart, chipid_pos):
 
 
 
-def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group):
+def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group, version):
     with open(geometry_yaml) as fi: geo = yaml.full_load(fi)
     chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
     vertical_lines=np.linspace(-1*(geo['width']/2), geo['width']/2, 11)
@@ -66,6 +71,7 @@ def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_ti
         ax.vlines(x=vl, ymin=horizontal_lines[0], ymax=horizontal_lines[-1], colors=['k'], linestyle='dotted')
     for hl in horizontal_lines:
         ax.hlines(y=hl, xmin=vertical_lines[0], xmax=vertical_lines[-1], colors=['k'], linestyle='dotted')
+    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
 
     chipid_pos = dict()
     for chipid in chip_pix.keys():
@@ -120,8 +126,8 @@ def main(controller_config=_default_controller_config, geometry_yaml=_default_ge
     tile_id = controller_config.split('-')[2]
     pacman_tile = controller_config.split('-')[5]
     
-    chipID_uart, missingIO = parse_hydra_network(controller_config, io_group)
-    plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group)
+    chipID_uart, missingIO, version = parse_hydra_network(controller_config, io_group)
+    plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_tile, io_group, version)
 
 
     

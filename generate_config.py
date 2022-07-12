@@ -6,12 +6,13 @@ import argparse
 _name = 'tile-6'
 _excluded_chips = []
 _good_root_connections = [11, 41, 71, 101]
+_io_group = 1
 _io_channels =           [21, 22, 23, 24]
 _excluded_links = [ (61, 71), (24, 34), (44, 43), (64, 74), (49, 59), (43, 44), (22, 32)]
 _paths = None
 
 
-_header = {"_config_type": "controller", "layout": "2.5.0", "network" : dict()}
+_header = {"_config_type": "controller", "layout": "2.4.0", "network" : dict()}
 
 
 

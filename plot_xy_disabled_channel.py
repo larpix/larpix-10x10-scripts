@@ -22,6 +22,7 @@ def parse_file(filename):
     with open(filename,'r') as f:
         data = json.load(f)
         for key in data.keys():
+            if key=='All': continue
             if key=="larpix-scripts-version":
                 version = data[key];
                 continue
@@ -53,7 +54,7 @@ def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
     for hl in horizontal_lines:
         ax.hlines(y=hl, xmin=vertical_lines[0], xmax=vertical_lines[-1], colors=['k'], linestyle='dotted')
 
-    plt.text(0.95,1.01,'LArPix version '+str(version), ha='center', va='center', transform=ax.transAxes)
+    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
     chipid_pos = dict()
     for chipid in chip_pix.keys():
         x,y = [[] for i in range(2)]
@@ -69,25 +70,33 @@ def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
     for key in trigger.keys():
         chip_id = key
         if chip_id not in range(11,111): continue
+        nchan = len(trigger[key])
         for channel_id in trigger[key]:
             trigger_count+=1
             x = geo['pixels'][chip_pix[chip_id][channel_id]][1]
             y = geo['pixels'][chip_pix[chip_id][channel_id]][2]
-            weight = 1.0
+            weight = 0.5
             r = Rectangle( ( x-(pitch/2.), y-(pitch/2.) ), pitch, pitch, color='r', alpha=weight )
             plt.gca().add_patch( r )
+            posX=chipid_pos[chip_id]['avgX']
+            posY=chipid_pos[chip_id]['avgY']-abs(chipid_pos[chip_id]['avgY']-chipid_pos[chip_id]['minY'])/2.
+            plt.annotate(nchan, [posX,posY], ha='center', va='center', color='r')
 
     pedestal_count=0
     for key in pedestal.keys():
         chip_id = int(key)
         if chip_id not in range(11,111): continue
+        nchan = len(pedestal[key])
         for channel_id in pedestal[key]:
             pedestal_count+=1
             x = geo['pixels'][chip_pix[chip_id][channel_id]][1]
             y = geo['pixels'][chip_pix[chip_id][channel_id]][2]
-            weight = 1.0
+            weight = 0.5
             r = Rectangle( ( x-(pitch/2.), y-(pitch/2.) ), pitch, pitch, color='orange', alpha=weight )
             plt.gca().add_patch( r )
+            posX=chipid_pos[chip_id]['avgX']
+            posY=chipid_pos[chip_id]['avgY']-abs(chipid_pos[chip_id]['avgY']-chipid_pos[chip_id]['minY'])
+            plt.annotate(nchan, [posX,posY], ha='center', va='center', color='orange')
 
     ax.set_title('Tile ID '+str(tile_id))
     if trigger_count!=0 and pedestal_count==0:
@@ -96,7 +105,7 @@ def plot_xy(trigger, pedestal, tile_id, geometry_yaml, version):
         ax.set_title('Tile ID '+str(tile_id)+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
     if trigger_count!=0 and pedestal_count!=0:
         ax.set_title('Tile ID '+str(tile_id)+'\n'+str(trigger_count)+' trigger rate disabled channels (red)'+'\n'+str(pedestal_count)+' pedestal disabled channels (orange)')
-    plt.savefig('disabled-xy-map-tile-id-'+str(tile_id)+'.png')
+    plt.savefig('tile-id-'+str(tile_id)+'-disabled-xy.png')
 
 
     
