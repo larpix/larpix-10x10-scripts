@@ -22,6 +22,7 @@ def parse_file(filename):
     with open(filename,'r') as f:
         data = json.load(f)
         for key in data.keys():
+            if key=='All': continue
             if key=="larpix-scripts-version":
                 version = data[key];
                 continue

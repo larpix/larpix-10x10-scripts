@@ -12,7 +12,7 @@ _excluded_links = [ (61, 71), (24, 34), (44, 43), (64, 74), (49, 59), (43, 44), 
 _paths = None
 
 
-_header = {"_config_type": "controller", "layout": "2.5.0", "network" : dict()}
+_header = {"_config_type": "controller", "layout": "2.4.0", "network" : dict()}
 
 
 
