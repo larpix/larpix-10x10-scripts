@@ -483,7 +483,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	_name = 'tile-' + tile_name + "-pacman-tile-"+str(pacman_tile)+"-hydra-network"
 	if True:
 		print('writing configuration', _name + '.json, including', sum(  [len(path) for path in paths] ), 'chips'  )
-		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
+		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, ['no test performed'], arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
 
 	##
 	##
@@ -504,6 +504,11 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	print('bad links: ', arr.excluded_links)
 	print('tested', len(arr.good_connections) + len(arr.excluded_links), 'uarts')
 	c.io.set_reg(0x00000010, 0, io_group=io_group)
+
+	if True:
+		print('writing configuration', _name + '.json, including', sum(  [len(path) for path in paths] ), 'chips'  )
+		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
+		
 	return c
 
 if __name__ == '__main__':
