@@ -191,7 +191,7 @@ def reset(c, config=None, enforce=False, verbose=False, modify_power=False):
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, verbose=True, modify_power=True, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=False, verbose=True, modify_power=True, **kwargs):
     if verbose: print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
