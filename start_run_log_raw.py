@@ -75,7 +75,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
 
     tile_id = 'tile-id-' + controller_config.split('-')[2]
 
-    for i in range(1, 9): check_power.report_power(c.io, 1, i)
+    check_power.report_power(c.io, 1, 1)
 
     c.io.disable_packet_parsing = True
     while True:
