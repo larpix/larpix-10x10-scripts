@@ -21,6 +21,8 @@ import base
 
 from base import *
 
+from larpix import configs 
+
 _default_config_name='configs/'
 _default_controller_config=None
 _default_disabled_channels=None
@@ -69,6 +71,9 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             replica_csa_enable = c[chip_key].config.csa_enable)
 
         print(replica_dict[chip_key]['replica_channel_mask'])
+
+        data = configs.load(config_files[-1])
+        print(data['register_values'])
 
         # mask off and disable all channels
         c[chip_key].config.channel_mask=[1]*64
