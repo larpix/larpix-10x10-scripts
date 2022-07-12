@@ -494,7 +494,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	##
 	##
 	config = _name+'.json'
-	c=base.main(controller_config=config)
+	c=base.main(controller_config=config, enforce=False)
 
 	for ipath, path in enumerate(paths):
 		for ich in range(len(path)):
