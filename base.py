@@ -9,7 +9,7 @@ import larpix.logger
 import numpy as np
 import time
 
-LARPIX_10X10_SCRIPTS_VERSION='v1.0.1'
+LARPIX_10X10_SCRIPTS_VERSION='v1.0.3'
 
 _default_controller_config=None
 _default_pacman_version='v1rev3'
