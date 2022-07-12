@@ -76,6 +76,11 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     tile_id = 'tile-id-' + controller_config.split('-')[2]
 
     check_power.report_power(c.io, 1, 1)
+    for chip in c.chips: 
+        ok, diff = c.verify_configuration(chip)
+        print(c[chip].config.channel_mask)
+        print(c[chip].config.csa_enable)
+        print(ok, diff)
 
     c.io.disable_packet_parsing = True
     while True:
