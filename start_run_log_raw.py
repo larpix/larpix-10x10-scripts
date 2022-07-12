@@ -14,6 +14,7 @@ import larpix.format.pacman_msg_format as pacman_msg_fmt
 import base
 #import load_config
 import enforce_loaded_config
+import check_power
 
 import os
 import argparse
@@ -73,6 +74,8 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     time.sleep(3)
 
     tile_id = 'tile-id-' + controller_config.split('-')[2]
+
+    for i in range(1, 9): check_power.report_power(c.io, 1, i)
 
     c.io.disable_packet_parsing = True
     while True:
