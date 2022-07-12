@@ -194,8 +194,6 @@ def main(controller_config=_default_controller_config,
         disabled_channels["All"]=nonrouted_channels
         print('No disabled list applied. Using the default bad channels list.')
         ped_fname=tile_id+ped_fname+"-default-disabled-channels"
-    ped_fname= ped_fname+'-'+str(base.LARPIX_10X10_SCRIPTS_VERSION)+".h5"
-        ped_fname=tile_id+ped_fname+"____default_bad_channels"
     ped_fname= ped_fname+".h5"
     print('initial disabled list: ',disabled_channels)
 
@@ -217,9 +215,6 @@ def main(controller_config=_default_controller_config,
 
     if no_refinement==False:
         ped_fname=tile_id+"-recursive-pedestal_%s" % revised_bad_channel_filename
-        ped_fname=ped_fname+'-'+str(base.LARPIX_10X10_SCRIPTS_VERSION)+".h5"
-        ped_fname=tile_id+"recursive_pedestal_%s.h5" % revised_bad_channel_filename
-
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname, vdda=0)
         #c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
