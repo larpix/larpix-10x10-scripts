@@ -324,8 +324,9 @@ if __name__ == '__main__':
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
     parser.add_argument('--pacman_version', default=_default_pacman_version, type=str, help='''Pacman version in use''')
     parser.add_argument('--logger', default=_default_logger, action='store_true', help='''Flag to create an HDF5Logger object to track data''')
-    parser.add_argument('--enforce', default=True, action='store_false', help='''Flag not to enforce config''')
+    parser.add_argument('--enforce', default=True, type=bool, help='''Flag whether to enforce config''')
     parser.add_argument('--no_reset', default=_default_reset, action='store_false', help='''Flag that if present, chips will NOT be reset, otherwise chips will be reset during initialization''')
+    parser.add_argument('--vdda', default=46020, type=int, help='''VDDA setting during bringup''')
     args = parser.parse_args()
     c = main(**vars(args))
 
