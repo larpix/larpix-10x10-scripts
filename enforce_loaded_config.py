@@ -19,16 +19,32 @@ import time
 
 import base
 
-from base import *
-
-
 _default_config_name='configs/'
 _default_controller_config=None
 _default_disabled_channels=None
 
 config_format = 'tile-id-{tile_id}-config-{chip_key}-*.json'
 
-
+def set_pacman_power(c, vdda=46020, vddd=40605):
+    c.io.set_reg(0x00024130, vdda) # tile 1 VDDA
+    c.io.set_reg(0x00024131, vddd) # tile 1 VDDD
+    c.io.set_reg(0x00024132, vdda) # tile 2 VDDA
+    c.io.set_reg(0x00024133, vddd) # tile 2 VDDD
+    c.io.set_reg(0x00024134, vdda) # tile 3 VDDA
+    c.io.set_reg(0x00024135, vddd) # tile 3 VDDD
+    c.io.set_reg(0x00024136, vdda) # tile 4 VDDA
+    c.io.set_reg(0x00024137, vddd) # tile 4 VDDD
+    c.io.set_reg(0x00024138, vdda) # tile 5 VDDA
+    c.io.set_reg(0x00024139, vddd) # tile 5 VDDD
+    c.io.set_reg(0x0002413a, vdda) # tile 6 VDDA
+    c.io.set_reg(0x0002413b, vddd) # tile 6 VDDD
+    c.io.set_reg(0x0002413c, vdda) # tile 7 VDDA
+    c.io.set_reg(0x0002413d, vddd) # tile 7 VDDD
+    c.io.set_reg(0x0002413e, vdda) # tile 8 VDDA
+    c.io.set_reg(0x0002413f, vddd) # tile 8 VDDD
+    c.io.set_reg(0x00000014, 1) # enable global larpix power
+    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+    time.sleep(0.1)
 
 def main(config_name=_default_config_name, controller_config=_default_controller_config, disabled_channels=_default_disabled_channels, *args, **kwargs):
     print('START LOAD CONFIG')
@@ -59,9 +75,8 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             print('loading',config_name)
             chip.config.load(config_name)
         else:
-            config_files = sorted(glob.glob(os.path.join(config_name, config_format.format(tile_id='*',chip_key=chip_key))))
+            config_files = sorted(glob.glob(os.path.join(config_name, config_format.format(tile_id='*', chip_key=chip_key))))
             if config_files:
-                print(config_files[-1])
                 print('loading',config_files[-1])
                 chip.config.load(config_files[-1])
 
@@ -69,8 +84,6 @@ def main(config_name=_default_config_name, controller_config=_default_controller
         replica_dict[chip_key] = dict(
             replica_channel_mask = c[chip_key].config.channel_mask,
             replica_csa_enable = c[chip_key].config.csa_enable)
-
-        print(replica_dict[chip_key]['replica_channel_mask'])
 
         # mask off and disable all channels
         c[chip_key].config.channel_mask=[1]*64

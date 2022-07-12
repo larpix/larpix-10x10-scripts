@@ -14,7 +14,6 @@ import larpix.format.pacman_msg_format as pacman_msg_fmt
 import base
 #import load_config
 import enforce_loaded_config
-import check_power
 
 import os
 import argparse
@@ -75,19 +74,12 @@ def main(config_name=_default_config_name, controller_config=_default_controller
 
     tile_id = 'tile-id-' + controller_config.split('-')[2]
 
-    check_power.report_power(c.io, 1, 1)
-    for chip in c.chips: 
-        ok, diff = c.verify_configuration(chip)
-        print(c[chip].config.channel_mask)
-        print(c[chip].config.csa_enable)
-        print(ok, diff)
-
     c.io.disable_packet_parsing = True
     while True:
         counter = 0
         last_count = 0
         c.io.enable_raw_file_writing = True
-        c.io.raw_filename = time.strftime(c.io.default_raw_filename_fmt)
+        c.io.raw_filename = tile_id + '-' + time.strftime(c.io.default_raw_filename_fmt)
         c.io.join()
         rhdf5.to_rawfile(filename=c.io.raw_filename, io_version=pacman_msg_fmt.latest_version)
         print('new run file at ',c.io.raw_filename)
