@@ -191,12 +191,12 @@ def reset(c, config=None, enforce=False, verbose=False, modify_power=False):
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=False, verbose=True, modify_power=True, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, no_enforce=False, verbose=True, modify_power=True, **kwargs):
     if verbose: print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
     c.io = larpix.io.PACMAN_IO(relaxed=True)
-    print(enforce)
+    if no_enforce: enforce = False
 
      ##### setup hydra network configuration
     if controller_config is None:
@@ -327,7 +327,7 @@ if __name__ == '__main__':
     parser.add_argument('--controller_config', default=_default_controller_config, type=str, help='''Hydra network configuration file''')
     parser.add_argument('--pacman_version', default=_default_pacman_version, type=str, help='''Pacman version in use''')
     parser.add_argument('--logger', default=_default_logger, action='store_true', help='''Flag to create an HDF5Logger object to track data''')
-    parser.add_argument('--enforce', default=False, type=bool, help='''Flag whether to enforce config''')
+    parser.add_argument('--no_enforce', default=store_true, default=False, help='''Flag whether to enforce config''')
     parser.add_argument('--no_reset', default=_default_reset, action='store_false', help='''Flag that if present, chips will NOT be reset, otherwise chips will be reset during initialization''')
     parser.add_argument('--vdda', default=46020, type=int, help='''VDDA setting during bringup''')
     args = parser.parse_args()
