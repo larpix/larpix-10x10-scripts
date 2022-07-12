@@ -211,7 +211,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     ###### set power to tile    
     if modify_power:
         if pacman_version=='v1rev3':
-            set_pacman_power(c)
+            set_pacman_power(c, vdda=vdda)
             power = power_registers()
             adc_read = 0x00024001
             for _io_group, io_channels in c.network.items():
