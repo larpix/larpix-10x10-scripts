@@ -62,7 +62,7 @@ def main(_name=_name, _io_group=_default_io_group, _good_root_connections=_good_
 	jsonFile.write(jsonString)
 	jsonFile.close()
 
-def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown', script_version='unknown'):
+def write_existing_path(_name=_name, _io_group=_default_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown', script_version='unknown'):
 	if paths is None: raise RuntimeError('No existing hydra networks specified with paths keyword')
 	na = graphs.NumberedArrangement()
 	missing_chips = []
