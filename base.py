@@ -301,10 +301,12 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     flush_data(c)
 
     if not enforce: 
+        print('not enforcing configuration')
         if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
         if verbose: print('[FINISH BASE]')
         return c
 
+    print('enforcing configuration:', enforce)
     for chip_key in c.chips:
         chip_registers = [(chip_key, i) for i in [82,83,125,129]]
         ok,diff = c.enforce_registers(chip_registers, timeout=0.01, n=10, n_verify=10)
