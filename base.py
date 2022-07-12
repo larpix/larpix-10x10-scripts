@@ -102,7 +102,7 @@ def set_pacman_power(c, vdda=46020, vddd=40605):
         bit_string = list('00000000')
         for tile in tiles: bit_string[-1*tile] = '1'
         c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
-        c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
+        c.io.set_reg(0x00000010, 0b11111111, io_group=_io_group) # enable tiles to be powered
     time.sleep(0.1)
 
 
