@@ -35,7 +35,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
     replica_dict = dict()
     
     # create controller
-    c = base.main(controller_config, vdda=0, *args, **kwargs)
+    c = base.main(controller_config,, *args, **kwargs)
 
     c.io.group_packets_by_io_group = True
     c.io.double_send_packets = True
