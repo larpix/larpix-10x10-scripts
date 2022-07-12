@@ -68,6 +68,8 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             replica_channel_mask = c[chip_key].config.channel_mask,
             replica_csa_enable = c[chip_key].config.csa_enable)
 
+        print(replica_dict[replica_channel_mask])
+
         # mask off and disable all channels
         c[chip_key].config.channel_mask=[1]*64
         c[chip_key].config.csa_enable=[0]*64
@@ -162,7 +164,6 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             if 'All' in disabled_channels:
                 for channel in disabled_channels['All']:
                     c[chip_key].config.channel_mask[channel] = 1
-                    print(chip_key, 'all channels disabled')
             if chip_key in disabled_channels:
                 for channel in disabled_channels[chip_key]:
                     c[chip_key].config.channel_mask[channel] = 1
