@@ -196,6 +196,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     ###### create controller with pacman io
     c = larpix.Controller()
     c.io = larpix.io.PACMAN_IO(relaxed=True)
+    print(enforce)
 
      ##### setup hydra network configuration
     if controller_config is None:
