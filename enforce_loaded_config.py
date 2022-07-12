@@ -19,32 +19,15 @@ import time
 
 import base
 
+from base import *
+
 _default_config_name='configs/'
 _default_controller_config=None
 _default_disabled_channels=None
 
 config_format = 'config-{chip_key}-*.json'
 
-def set_pacman_power(c, vdda=46020, vddd=40605):
-    c.io.set_reg(0x00024130, vdda) # tile 1 VDDA
-    c.io.set_reg(0x00024131, vddd) # tile 1 VDDD
-    c.io.set_reg(0x00024132, vdda) # tile 2 VDDA
-    c.io.set_reg(0x00024133, vddd) # tile 2 VDDD
-    c.io.set_reg(0x00024134, vdda) # tile 3 VDDA
-    c.io.set_reg(0x00024135, vddd) # tile 3 VDDD
-    c.io.set_reg(0x00024136, vdda) # tile 4 VDDA
-    c.io.set_reg(0x00024137, vddd) # tile 4 VDDD
-    c.io.set_reg(0x00024138, vdda) # tile 5 VDDA
-    c.io.set_reg(0x00024139, vddd) # tile 5 VDDD
-    c.io.set_reg(0x0002413a, vdda) # tile 6 VDDA
-    c.io.set_reg(0x0002413b, vddd) # tile 6 VDDD
-    c.io.set_reg(0x0002413c, vdda) # tile 7 VDDA
-    c.io.set_reg(0x0002413d, vddd) # tile 7 VDDD
-    c.io.set_reg(0x0002413e, vdda) # tile 8 VDDA
-    c.io.set_reg(0x0002413f, vddd) # tile 8 VDDD
-    c.io.set_reg(0x00000014, 1) # enable global larpix power
-    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
-    time.sleep(0.1)
+
 
 def main(config_name=_default_config_name, controller_config=_default_controller_config, disabled_channels=_default_disabled_channels, *args, **kwargs):
     print('START LOAD CONFIG')
