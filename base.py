@@ -309,7 +309,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     print('enforcing configuration:', enforce)
     for chip_key in c.chips:
         chip_registers = [(chip_key, i) for i in [82,83,125,129]]
-        ok,diff = c.enforce_registers(chip_registers, timeout=0.01, n=10, n_verify=10)
+        ok,diff = c.enforce_registers(chip_registers, timeout=0.1, n=10, n_verify=10)
         if not ok:
             raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
