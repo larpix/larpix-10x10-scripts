@@ -10,11 +10,9 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 
 _default_filename=None
-<<<<<<< HEAD
+
 _default_geometry_yaml='../../layout-2.4.0.yaml'
-=======
-_default_geometry_yaml='../layout-2.4.0.yaml'
->>>>>>> 56801a0202e856ba7c036bd7336b3a0b838918c1
+
 _default_metric='mean'
 
 pitch=4.4 # mm
@@ -55,12 +53,7 @@ def find_channel_id(u): return u % 64
 def find_chip_id(u): return (u//64) % 256
 
 
-
-<<<<<<< HEAD
 def plot_1d(d, metric, tile_id, version):
-=======
-def plot_1d(d, metric):
->>>>>>> 56801a0202e856ba7c036bd7336b3a0b838918c1
     fig, ax = plt.subplots(figsize=(8,8))
     a = [d[key][metric] for key in d.keys()]
     min_bin = int(min(a))-1
@@ -69,7 +62,6 @@ def plot_1d(d, metric):
     ax.hist(a, bins=np.linspace(min_bin, max_bin, n_bins))
     ax.grid(True)
     ax.set_ylabel('Channel Count')
-<<<<<<< HEAD
     ax.set_title('Tile ID '+str(tile_id))
     ax.set_yscale('log')
     plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
@@ -83,12 +75,6 @@ def plot_1d(d, metric):
     if metric=='rate':
         ax.set_xlabel('Trigger Rate [Hz]')
         plt.savefig('tile-id-'+str(tile_id)+'-1d-rate.png')
-=======
-#    ax.set_title(title)
-    plt.show()
-
->>>>>>> 56801a0202e856ba7c036bd7336b3a0b838918c1
-
 
 
 def plot_xy(d, metric, geometry_yaml, normalization, tile_id, version):
@@ -135,7 +121,6 @@ def plot_xy(d, metric, geometry_yaml, normalization, tile_id, version):
         r = Rectangle( ( x-(pitch/2.), y-(pitch/2.) ), pitch, pitch, color='k', alpha=weight )
         plt.gca().add_patch( r )
 
-<<<<<<< HEAD
     colorbar = fig.colorbar(cm.ScalarMappable(norm=Normalize(vmin=0, vmax=normalization), cmap='Greys'), ax=ax)
 
     if metric=='mean':
@@ -150,16 +135,7 @@ def plot_xy(d, metric, geometry_yaml, normalization, tile_id, version):
         ax.set_title('Tile ID '+tile_id+'\nTrigger Rate')
         colorbar.set_label('[Hz]')
         plt.savefig('tile-id-'+str(tile_id)+'-xy-rate.png')
-=======
-    fig.colorbar(cm.ScalarMappable(norm=Normalize(vmin=0, vmax=normalization), cmap='Greys'), ax=ax)
 
-    if metric=='mean': ax.set_title(title+'\nADC Mean')
-    if metric=='std': ax.set_title(title+'\nADC RMS')
-    if metric=='rate': ax.set_title(title+'\nTrigger Rate')
-    plt.savefig(title+'.png')
->>>>>>> 56801a0202e856ba7c036bd7336b3a0b838918c1
-
-    
 def main(filename=_default_filename,
          geometry_yaml=_default_geometry_yaml,
          metric=_default_metric,
@@ -173,15 +149,10 @@ def main(filename=_default_filename,
     normalization=50
     if metric=='std': normalization=5
     if metric=='rate': normalization=10
-<<<<<<< HEAD
+
     plot_xy(d, metric, geometry_yaml, normalization, tile_id, version)
 
     plot_1d(d, metric, tile_id, version)
-=======
-    plot_xy(d, metric, geometry_yaml, normalization)
-
-    plot_1d(d, metric)
->>>>>>> 56801a0202e856ba7c036bd7336b3a0b838918c1
 
 
     
