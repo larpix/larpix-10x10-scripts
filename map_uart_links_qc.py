@@ -373,7 +373,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			arr.add_onesided_excluded_link((next_chip, chip))
 			if not (real_io_channel==io_channel):
 				c.remove_chip(test_key)
-			base.reset(c, config, enforce=True)
+			base.reset(c, config, enforce=True, modify_power=True)
 			continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
@@ -404,7 +404,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			print(diff)
 			print('reset planned')
 
-		if not prev_us_backup is None:
+		if not prev_us_backup is None and ok1:
 			c[prev_key].config.enable_miso_upstream = prev_us_backup
 			ok2,diff = c.enforce_registers([(prev_key, 124)], timeout=0.2, n=10, n_verify=5)
 			if not ok2: 
@@ -412,12 +412,13 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 				print(diff)
 				print('reset planned')
 
-		c[real_next_key].config.enable_miso_downstream = next_ds_backup
-		ok3,diff = c.enforce_registers([(real_next_key, 125)], timeout=0.2, n=10, n_verify=5)
-		if not ok3: 
-			print('****** Issue returning N.C.O.T.', real_next_key, 'to original config')
-			print(diff)
-			print('reset planned')
+		if ok1 and ok2:		
+			c[real_next_key].config.enable_miso_downstream = next_ds_backup
+			ok3,diff = c.enforce_registers([(real_next_key, 125)], timeout=0.2, n=10, n_verify=5)
+			if not ok3: 
+				print('****** Issue returning N.C.O.T.', real_next_key, 'to original config')
+				print(diff)
+				print('reset planned')
 
 		if all([ok1, ok2, ok3]): 
 			continue

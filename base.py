@@ -129,7 +129,11 @@ def flush_data(controller, runtime=0.1, rate_limit=0., max_iterations=10):
         if len(controller.reads[-1])/runtime <= rate_limit:
             break
 
-def reset(c, config=None, enforce=False, verbose=False, modify_power=False):
+def reset(c, config=None, enforce=False, verbose=False, modify_power=False, vdda=46020):
+    if modify_power:
+        c.io.set_reg(0x00000010, 0, io_group=io_group)
+        time.sleep(0.1)
+        set_pacman_power(c, vdda=vdda)
     ##### issue hard reset (resets state machines and configuration memory)
     if not config is None:
         new_controller = main(controller_config=config, modify_power=modify_power, verbose=verbose, enforce=enforce)
