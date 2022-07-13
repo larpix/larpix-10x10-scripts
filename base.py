@@ -302,7 +302,6 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
     flush_data(c)
 
     if not enforce: 
-        print('not enforcing configuration')
         if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
         if verbose: print('[FINISH BASE]')
         return c
@@ -314,7 +313,7 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
         if not ok:
             raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
-    c.io.gruop_packets_by_io_group = False
+    c.io.group_packets_by_io_group = False
     if verbose: print('base configuration successfully enforced')
     
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))

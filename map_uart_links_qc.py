@@ -373,7 +373,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			arr.add_onesided_excluded_link((next_chip, chip))
 			if not (real_io_channel==io_channel):
 				c.remove_chip(test_key)
-			base.reset(c, config)
+			base.reset(c, config, enforce=True)
 			continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
