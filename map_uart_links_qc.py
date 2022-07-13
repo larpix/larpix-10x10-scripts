@@ -404,7 +404,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			print(diff)
 			print('reset planned')
 
-		if not prev_us_backup is None and ok1:
+		if (not prev_us_backup is None) and ok1:
 			c[prev_key].config.enable_miso_upstream = prev_us_backup
 			ok2,diff = c.enforce_registers([(prev_key, 124)], timeout=0.2, n=10, n_verify=5)
 			if not ok2: 
@@ -423,7 +423,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 		if all([ok1, ok2, ok3]): 
 			continue
 		else:
-			base.reset(c, config)
+			base.reset(c, config, enforce=True)
 
 
 
