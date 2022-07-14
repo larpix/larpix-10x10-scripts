@@ -29,15 +29,15 @@ suffix = ['no_cut','10kHz_cut','1kHz_cut','100Hz_cut']
 
 def initial_setup(ctr, controller_config, tile_id):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    fname="-trigger_rate_%s_" % suffix[ctr] #str(rate_cut[ctr])
-    fname=tile_id+fname+str(now)+".h5"
+    fname="-trigger-rate-%s-" % suffix[ctr] #str(rate_cut[ctr])
+    fname=tile_id+fname+str(now)+'_'+str(base.LARPIX_10X10_SCRIPTS_VERSION)+".h5"
     c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
 def initial_setup_low_dac(controller_config, tile_id):
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    fname="-low_thresh_trigger_rate_"#str(rate_cut[ctr])
-    fname=tile_id+fname+str(now)+".h5"
+    fname="-low-thresh-trigger-rate-"#str(rate_cut[ctr])
+    fname=tile_id+fname+str(now)+'_'+str(base.LARPIX_10X10_SCRIPTS_VERSION)+".h5"
     c = base.main(controller_config, logger=True, filename=fname, enforce=False)
     return c, fname
 
@@ -336,7 +336,7 @@ def save_do_not_enable_list(forbidden,tile_id):
         if ck not in d: d[ck]=[]
         if p[1] not in d[ck]: d[ck].append(p[1])        
     now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    with open(tile_id+'-trigger-rate-DO-NOT-ENABLE-channel-list-'+now+ '_v' + str(base.LARPIX_10X10_SCRIPTS_VERSION)  +'.json','w') as outfile:
+    with open(tile_id+'-trigger-rate-disabled-list-'+now+ '_' + str(base.LARPIX_10X10_SCRIPTS_VERSION)  +'.json','w') as outfile:
         json.dump(d, outfile, indent=4)
         return 
 
