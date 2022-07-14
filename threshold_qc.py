@@ -522,7 +522,7 @@ def toggle_trim(c, channels, csa_disable, extreme_edge_chip_keys,
 
     return csa_disable
 
-def save_config_to_file(c, chip_keys, csa_disable, verbose):
+def save_config_to_file(c, chip_keys, csa_disable, verbose, tile_id):
     chip_register_pairs = []
     for chip_key in chip_keys:
         c[chip_key].config.csa_enable = [1]*64

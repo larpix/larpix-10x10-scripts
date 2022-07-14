@@ -373,7 +373,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			arr.add_onesided_excluded_link((next_chip, chip))
 			if not (real_io_channel==io_channel):
 				c.remove_chip(test_key)
-			base.reset(c, config)
+			base.reset(c, config, enforce=True, modify_power=True)
 			continue
 
 		c[test_key].config.enable_miso_downstream = arr.get_uart_enable_list(next_chip, chip)
@@ -404,7 +404,7 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 			print(diff)
 			print('reset planned')
 
-		if not prev_us_backup is None:
+		if (not prev_us_backup is None) and ok1:
 			c[prev_key].config.enable_miso_upstream = prev_us_backup
 			ok2,diff = c.enforce_registers([(prev_key, 124)], timeout=0.2, n=10, n_verify=5)
 			if not ok2: 
@@ -412,17 +412,18 @@ def test_chip(c, io_group, io_channel, path, ich, all_paths_copy, io_channels_co
 				print(diff)
 				print('reset planned')
 
-		c[real_next_key].config.enable_miso_downstream = next_ds_backup
-		ok3,diff = c.enforce_registers([(real_next_key, 125)], timeout=0.2, n=10, n_verify=5)
-		if not ok3: 
-			print('****** Issue returning N.C.O.T.', real_next_key, 'to original config')
-			print(diff)
-			print('reset planned')
+		if ok1 and ok2:		
+			c[real_next_key].config.enable_miso_downstream = next_ds_backup
+			ok3,diff = c.enforce_registers([(real_next_key, 125)], timeout=0.2, n=10, n_verify=5)
+			if not ok3: 
+				print('****** Issue returning N.C.O.T.', real_next_key, 'to original config')
+				print(diff)
+				print('reset planned')
 
 		if all([ok1, ok2, ok3]): 
 			continue
 		else:
-			base.reset(c, config)
+			base.reset(c, config, enforce=True)
 
 
 
@@ -483,7 +484,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	_name = 'tile-' + tile_name + "-pacman-tile-"+str(pacman_tile)+"-hydra-network"
 	if True:
 		print('writing configuration', _name + '.json, including', sum(  [len(path) for path in paths] ), 'chips'  )
-		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
+		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, ['no test performed'], arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
 
 	##
 	##
@@ -494,7 +495,7 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	##
 	##
 	config = _name+'.json'
-	c=base.main(controller_config=config)
+	c=base.main(controller_config=config, enforce=False, vdda=0)
 
 	for ipath, path in enumerate(paths):
 		for ich in range(len(path)):
@@ -504,6 +505,11 @@ def main(pacman_tile, io_group, skip_test, tile_id, pacman_version, vdda):
 	print('bad links: ', arr.excluded_links)
 	print('tested', len(arr.good_connections) + len(arr.excluded_links), 'uarts')
 	c.io.set_reg(0x00000010, 0, io_group=io_group)
+
+	if True:
+		print('writing configuration', _name + '.json, including', sum(  [len(path) for path in paths] ), 'chips'  )
+		generate_config.write_existing_path(_name, io_group, root_chips, io_channels, paths, arr.excluded_links, arr.excluded_chips, asic_version=2, script_version=base.LARPIX_10X10_SCRIPTS_VERSION)
+		
 	return c
 
 if __name__ == '__main__':

@@ -10,13 +10,14 @@ _io_group = 1
 _io_channels =           [21, 22, 23, 24]
 _excluded_links = [ (61, 71), (24, 34), (44, 43), (64, 74), (49, 59), (43, 44), (22, 32)]
 _paths = None
+_default_io_group = 1
 
 
 _header = {"_config_type": "controller", "layout": "2.4.0", "network" : dict()}
 
 
 
-def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown'):
+def main(_name=_name, _io_group=_default_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown'):
 	_header['name'] = _name
 	_header['network'][str(_io_group)] = dict()
 	nchips_hit = 0
@@ -62,7 +63,7 @@ def main(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_con
 	jsonFile.write(jsonString)
 	jsonFile.close()
 
-def write_existing_path(_name=_name, _io_group=_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown', script_version='unknown'):
+def write_existing_path(_name=_name, _io_group=_default_io_group, _good_root_connections=_good_root_connections, _io_channels=_io_channels, paths=_paths, _excluded_links=_excluded_links, _excluded_chips=_excluded_chips, verbose=False, asic_version='unknown', script_version='unknown'):
 	if paths is None: raise RuntimeError('No existing hydra networks specified with paths keyword')
 	na = graphs.NumberedArrangement()
 	missing_chips = []

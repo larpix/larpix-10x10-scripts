@@ -23,7 +23,7 @@ _default_config_name='configs/'
 _default_controller_config=None
 _default_disabled_channels=None
 
-config_format = 'config-{chip_key}-*.json'
+config_format = 'tile-id-{tile_id}-config-{chip_key}-*.json'
 
 def set_pacman_power(c, vdda=46020, vddd=40605):
     c.io.set_reg(0x00024130, vdda) # tile 1 VDDA
@@ -75,7 +75,7 @@ def main(config_name=_default_config_name, controller_config=_default_controller
             print('loading',config_name)
             chip.config.load(config_name)
         else:
-            config_files = sorted(glob.glob(os.path.join(config_name, config_format.format(chip_key=chip_key))))
+            config_files = sorted(glob.glob(os.path.join(config_name, config_format.format(tile_id='*', chip_key=chip_key))))
             if config_files:
                 print('loading',config_files[-1])
                 chip.config.load(config_files[-1])

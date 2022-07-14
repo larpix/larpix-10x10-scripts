@@ -10,7 +10,9 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 
 _default_filename=None
-_default_geometry_yaml='../layout-2.4.0.yaml'
+
+_default_geometry_yaml='../../layout-2.4.0.yaml'
+
 _default_metric='mean'
 
 pitch=4.4 # mm
@@ -25,6 +27,8 @@ p_id'].astype(int))*64 + d['channel_id'].astype(int)
 def parse_file(filename):
     d = dict()
     f = h5py.File(filename,'r')
+    unixtime=f['packets'][:]['timestamp'][f['packets'][:]['packet_type']==4]
+    livetime = np.max(unixtime)-np.min(unixtime)
     data_mask = f['packets'][:]['packet_type']==0
     valid_parity_mask = f['packets'][:]['valid_parity']==1
     mask = np.logical_and(data_mask, valid_parity_mask)
@@ -37,7 +41,7 @@ def parse_file(filename):
         d[i]=dict(
             mean = np.mean(masked_adc),
             std = np.std(masked_adc),
-            rate = len(masked_adc) )
+            rate = len(masked_adc) / (livetime + 1e-9) )
     return d
 
 
@@ -49,8 +53,7 @@ def find_channel_id(u): return u % 64
 def find_chip_id(u): return (u//64) % 256
 
 
-
-def plot_1d(d, metric):
+def plot_1d(d, metric, tile_id, version):
     fig, ax = plt.subplots(figsize=(8,8))
     a = [d[key][metric] for key in d.keys()]
     min_bin = int(min(a))-1
@@ -58,17 +61,23 @@ def plot_1d(d, metric):
     n_bins = max_bin-min_bin
     ax.hist(a, bins=np.linspace(min_bin, max_bin, n_bins))
     ax.grid(True)
-    if metric=='mean': ax.set_xlabel('ADC Mean')
-    if metric=='std': ax.set_xlabel('ADC RMS')
-    if metric=='rate': ax.set_xlabel('Trigger Rate')
     ax.set_ylabel('Channel Count')
-#    ax.set_title(title)
-    plt.show()
+    ax.set_title('Tile ID '+str(tile_id))
+    ax.set_yscale('log')
+    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
+    
+    if metric=='mean':
+        ax.set_xlabel('ADC Mean')
+        plt.savefig('tile-id-'+str(tile_id)+'-1d-mean.png')
+    if metric=='std':
+        ax.set_xlabel('ADC RMS')
+        plt.savefig('tile-id-'+str(tile_id)+'-1d-std.png')
+    if metric=='rate':
+        ax.set_xlabel('Trigger Rate [Hz]')
+        plt.savefig('tile-id-'+str(tile_id)+'-1d-rate.png')
 
 
-
-
-def plot_xy(d, metric, title, geometry_yaml, normalization):
+def plot_xy(d, metric, geometry_yaml, normalization, tile_id, version):
     with open(geometry_yaml) as fi: geo = yaml.full_load(fi)
     chip_pix = dict([(chip_id, pix) for chip_id,pix in geo['chips']])
     vertical_lines=np.linspace(-1*(geo['width']/2), geo['width']/2, 11)
@@ -86,7 +95,8 @@ def plot_xy(d, metric, title, geometry_yaml, normalization):
         ax.vlines(x=vl, ymin=horizontal_lines[0], ymax=horizontal_lines[-1], colors=['k'], linestyle='dotted')
     for hl in horizontal_lines:
         ax.hlines(y=hl, xmin=vertical_lines[0], xmax=vertical_lines[-1], colors=['k'], linestyle='dotted')
-
+    plt.text(0.95,1.01,'LArPix '+str(version), ha='center', va='center', transform=ax.transAxes)
+        
     chipid_pos = dict()
     for chipid in chip_pix.keys():
         x,y = [[] for i in range(2)]
@@ -111,14 +121,21 @@ def plot_xy(d, metric, title, geometry_yaml, normalization):
         r = Rectangle( ( x-(pitch/2.), y-(pitch/2.) ), pitch, pitch, color='k', alpha=weight )
         plt.gca().add_patch( r )
 
-    fig.colorbar(cm.ScalarMappable(norm=Normalize(vmin=0, vmax=normalization), cmap='Greys'), ax=ax)
+    colorbar = fig.colorbar(cm.ScalarMappable(norm=Normalize(vmin=0, vmax=normalization), cmap='Greys'), ax=ax)
 
-    if metric=='mean': ax.set_title(title+'\nADC Mean')
-    if metric=='std': ax.set_title(title+'\nADC RMS')
-    if metric=='rate': ax.set_title(title+'\nTrigger Rate')
-    plt.savefig(title+'.png')
+    if metric=='mean':
+        ax.set_title('Tile ID '+tile_id+'\nADC Mean')
+        colorbar.set_label('[ADC]')
+        plt.savefig('tile-id-'+str(tile_id)+'-xy-mean.png')
+    if metric=='std':
+        ax.set_title('Tile ID '+tile_id+'\nADC RMS')
+        colorbar.set_label('[ADC]')
+        plt.savefig('tile-id-'+str(tile_id)+'-xy-std.png')
+    if metric=='rate':
+        ax.set_title('Tile ID '+tile_id+'\nTrigger Rate')
+        colorbar.set_label('[Hz]')
+        plt.savefig('tile-id-'+str(tile_id)+'-xy-rate.png')
 
-    
 def main(filename=_default_filename,
          geometry_yaml=_default_geometry_yaml,
          metric=_default_metric,
@@ -126,12 +143,16 @@ def main(filename=_default_filename,
 
     d = parse_file( filename )
 
+    tile_id = filename.split('-')[2]
+    version=filename.split('-')[-1].split('.h5')[0]
+    
     normalization=50
     if metric=='std': normalization=5
     if metric=='rate': normalization=10
-    plot_xy(d, metric, geometry_yaml, normalization)
 
-    plot_1d(d, metric)
+    plot_xy(d, metric, geometry_yaml, normalization, tile_id, version)
+
+    plot_1d(d, metric, tile_id, version)
 
 
     
