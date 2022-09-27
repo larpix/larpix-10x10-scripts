@@ -195,7 +195,7 @@ def reset(c, config=None, enforce=False, verbose=False, modify_power=False, vdda
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, no_enforce=False, verbose=True, modify_power=True, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, no_enforce=False, verbose=True, modify_power=True, return_bad_keys=False, retry=0, **kwargs):
     if verbose: print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
@@ -315,13 +315,20 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
         chip_registers = [(chip_key, i) for i in [82,83,125,129]]
         ok,diff = c.enforce_registers(chip_registers, timeout=0.1, n=10, n_verify=10)
         if not ok:
-            raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
+            print(diff,'\nconfig error on chips',list(diff.keys()))
+            if return_bad_keys: return c, list(diff.keys()) 
+            if retry < 5:
+                retry = retry+1
+                print('Retry attempt # ',retry)
+                return main(controller_config, pacman_version, logger, vdda, reset, enforce, no_enforce, verbose, modify_power, retry=retry)
+            else: raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
     c.io.group_packets_by_io_group = False
     if verbose: print('base configuration successfully enforced')
     
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     if verbose: print('[FINISH BASE]')
+    if return_bad_keys: return c, []
     return c
 
 
