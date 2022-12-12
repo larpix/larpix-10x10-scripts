@@ -88,6 +88,7 @@ def plot_hydra_network(geometry_yaml, chipID_uart, missingIO, tile_id, pacman_ti
         chipIDpair=missingIO[i]
         A = chipIDpair[0]; B = chipIDpair[1]
         if A>B: A = chipIDpair[1]; B = chipIDpair[0]
+        print("A, B = ",A,",",B)
         r = Rectangle( (chipid_pos[A]['maxX'],chipid_pos[A]['minY']),
                        abs(chipid_pos[A]['maxX']-chipid_pos[B]['minX']),
                        abs(chipid_pos[A]['maxY']-chipid_pos[A]['minY']),

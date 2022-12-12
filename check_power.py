@@ -8,7 +8,7 @@ import larpix.io
 import larpix.logger
 import numpy as np
 import time
-
+import json
 
 _default_pacman_tile=1
 _default_io_group=1
@@ -42,6 +42,14 @@ power_val[5]=0b00010000
 power_val[6]=0b00100000
 power_val[7]=0b01000000
 power_val[8]=0b10000000
+#power_val[1]=0b1000000001
+#power_val[2]=0b1000000010
+#power_val[3]=0b1000000100
+#power_val[4]=0b1000001000
+#power_val[5]=0b1000010000
+#power_val[6]=0b1000100000
+#power_val[7]=0b1001000000
+#power_val[8]=0b1010000000
 
 
 
@@ -50,6 +58,8 @@ def set_pacman_power(io, io_group, tile, vdda=46020, vddd=40605):
     io.set_reg(vddd_reg[tile], vddd, io_group=io_group)
     io.set_reg(0x00000014, 1, io_group=io_group) # enable global larpix power
     io.set_reg(0x00000010, power_val[tile], io_group=io_group) # enable tiles to be powered
+   # io.set_reg(0x101C, 4, io_group=io_group)
+   # io.set_reg(0x18, 0xffffffff, io_group=io_group)
     time.sleep(0.1)
 
 
@@ -85,6 +95,46 @@ def report_power(io, io_group, tile):
           '\tIDDD:',(((val_iddd>>16)-(val_iddd>>31)*65535)*500*0.01),'mA'
     )
 
+def write_power(io, io_group, tile):
+    power = power_registers()
+    adc_read = 0x00024001
+    val_vdda = io.get_reg(adc_read+power[tile][0], io_group=io_group)
+    val_idda = io.get_reg(adc_read+power[tile][1], io_group=io_group)
+    val_vddd = io.get_reg(adc_read+power[tile][2], io_group=io_group)
+    val_iddd = io.get_reg(adc_read+power[tile][3], io_group=io_group)
+    time_format = time.strftime('%Y_%m_%d_%H_%S_%Z')
+    filename = 'power-up-'+time_format+'.json'
+
+    report = {}
+
+    # !!!! TEMPERARY !!!!!
+    tile_id = tile+62
+    if tile == 1: tile_id = 67
+    if tile == 2: tile_id = 68
+    if tile == 3: tile_id = 69
+    if tile == 4: tile_id = 70
+    if tile == 5: tile_id = 72
+    if tile == 6: tile_id = 73
+    if tile == 7: tile_id = 74
+    if tile == 8: tile_id = 75
+
+    report['tile_id'] = tile_id
+    report['pacman_id'] = 29
+    report['pacman_tile'] = tile
+    report['cable_length'] = 0.
+    #report['vdda_dac'] = val_vdda
+    report['vdda_dac'] = 46020
+    report['vdda_mV'] = (((val_vdda>>16)>>3)*4)
+    report['idda_mA'] = (((val_idda>>16)-(val_idda>>31)*65535)*500*0.01)
+    #report['vddd_dac'] = val_vddd
+    report['vddd_dac'] = 40605
+    report['vddd_mV'] = (((val_vddd>>16)>>3)*4)
+    report['iddd_mA'] = (((val_iddd>>16)-(val_iddd>>31)*65535)*500*0.01)
+
+    json_string = json.dumps(report, indent=4)
+    json_file = open(filename,"w")
+    json_file.write(json_string)
+    json_file.close()
 
     
 def main(io_group=_default_io_group,
@@ -98,6 +148,7 @@ def main(io_group=_default_io_group,
     ###### set power to tile    
     set_pacman_power(c.io, io_group, pacman_tile)
     report_power(c.io, io_group, pacman_tile)
+    write_power(c.io, io_group, pacman_tile)
 
     ###### disable tile power
     c.io.set_reg(0x00000010, 0, io_group=io_group)

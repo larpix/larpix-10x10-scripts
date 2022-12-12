@@ -35,6 +35,7 @@ def parse_file(filename):
     adc = f['packets']['dataword'][mask]
     unique_id = unique_channel_id(f['packets'][mask])
     unique_id_set = np.unique(unique_id)
+    print("number of packets in parsed files =",len(unique_id))
     for i in unique_id_set:
         id_mask = unique_id == i
         masked_adc = adc[id_mask]
@@ -56,8 +57,8 @@ def find_chip_id(u): return (u//64) % 256
 def plot_1d(d, metric, tile_id, version):
     fig, ax = plt.subplots(figsize=(8,8))
     a = [d[key][metric] for key in d.keys()]
-    min_bin = int(min(a))-1
-    max_bin = int(max(a))+1
+    min_bin = int(min(a))#-1
+    max_bin = int(max(a))#+1
     n_bins = max_bin-min_bin
     ax.hist(a, bins=np.linspace(min_bin, max_bin, n_bins))
     ax.grid(True)

@@ -25,11 +25,19 @@ _default_clk_ctrl = 1
 
 ##### default IO 
 _uart_phase = 0
+
+#clk_ctrl_2_clk_ratio_map = {
+#        0: 2,
+#        1: 4,
+#        2: 8,
+#        3: 16
+#        }
+
 clk_ctrl_2_clk_ratio_map = {
-        0: 2,
-        1: 4,
-        2: 8,
-        3: 16
+        0: 10,
+        1: 20,
+        2: 40,
+        3: 80
         }
 
 v2a_nonrouted_channels=[6,7,8,9,22,23,24,25,38,39,40,54,55,56,57]
@@ -99,10 +107,12 @@ def set_pacman_power(c, vdda=46020, vddd=40605):
             c.io.set_reg(pair[0], vdda, io_group=_io_group)
             c.io.set_reg(pair[1], vddd, io_group=_io_group)
         tiles = get_all_tiles(active_io_channels)
-        bit_string = list('00000000')
+        bit_string = list('100000000')
         for tile in tiles: bit_string[-1*tile] = '1'
         c.io.set_reg(0x00000014, 1, io_group=_io_group) # enable global larpix power
         c.io.set_reg(0x00000010, int("".join(bit_string), 2), io_group=_io_group) # enable tiles to be powered
+        c.io.set_reg(0x101C, 4, io_group=_io_group)
+        c.io.set_reg(0x18, 0xffffffff, io_group=_io_group) # enable uarts (for all tiles?)
     time.sleep(0.1)
 
 
@@ -195,7 +205,7 @@ def reset(c, config=None, enforce=False, verbose=False, modify_power=False, vdda
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     return c
         
-def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, no_enforce=False, verbose=True, modify_power=True, **kwargs):
+def main(controller_config=_default_controller_config, pacman_version=_default_pacman_version, logger=_default_logger, vdda=46020, reset=_default_reset, enforce=True, no_enforce=False, verbose=True, modify_power=True, return_bad_keys=False, retry=0, **kwargs):
     if verbose: print('[START BASE]')
     ###### create controller with pacman io
     c = larpix.Controller()
@@ -315,13 +325,20 @@ def main(controller_config=_default_controller_config, pacman_version=_default_p
         chip_registers = [(chip_key, i) for i in [82,83,125,129]]
         ok,diff = c.enforce_registers(chip_registers, timeout=0.1, n=10, n_verify=10)
         if not ok:
-            raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
+            print(diff,'\nconfig error on chips',list(diff.keys()))
+            if return_bad_keys: return c, list(diff.keys()) 
+            if retry < 5:
+                retry = retry+1
+                print('Retry attempt # ',retry)
+                return main(controller_config, pacman_version, logger, vdda, reset, enforce, no_enforce, verbose, modify_power, retry=retry)
+            else: raise RuntimeError(diff,'\nconfig error on chips',list(diff.keys()))
     c.io.double_send_packets = False
     c.io.group_packets_by_io_group = False
     if verbose: print('base configuration successfully enforced')
     
     if hasattr(c,'logger') and c.logger: c.logger.record_configs(list(c.chips.values()))
     if verbose: print('[FINISH BASE]')
+    if return_bad_keys: return c, []
     return c
 
 

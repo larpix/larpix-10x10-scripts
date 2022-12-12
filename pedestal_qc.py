@@ -145,10 +145,10 @@ def evaluate_pedestal(datalog_file, disabled_channels, baseline_cut_value, no_ap
 
 
 
-def save_simple_json(record, tile_id):
+def save_simple_json(record, tile_id, tag):
     now = time.strftime("%Y_%m_%d_%H_%M_%S_%Z")
     record['larpix-scripts-version'] = base.LARPIX_10X10_SCRIPTS_VERSION
-    with open(tile_id+'-pedestal-disabled-list-'+now+ '-' + str(base.LARPIX_10X10_SCRIPTS_VERSION)+'.json','w') as outfile:
+    with open(tile_id+'-pedestal-disabled-list-'+tag+'-'+now+ '-' + str(base.LARPIX_10X10_SCRIPTS_VERSION)+'.json','w') as outfile:
         json.dump(record, outfile, indent=4)
         return now
 
@@ -209,12 +209,13 @@ def main(controller_config=_default_controller_config,
     revised_bad_channel_filename=None
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
+        print('ped_fname =',ped_fname)
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-        revised_bad_channel_filename=save_simple_json(revised_disabled_channels, tile_id)
+        revised_bad_channel_filename=save_simple_json(revised_disabled_channels, tile_id, 'first')
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     if no_refinement==False:
-        ped_fname=tile_id+"-recursive-pedestal_%s" % revised_bad_channel_filename
+        ped_fname=tile_id+"-recursive-pedestal_%s.h5" % revised_bad_channel_filename
         c = base.main(controller_config=controller_config, logger=True, filename=ped_fname, vdda=0)
         #c = base.main(controller_config=controller_config, logger=True, filename=ped_fname)
         configure_pedestal(c, periodic_trigger_cycles, revised_disabled_channels)
@@ -227,7 +228,7 @@ def main(controller_config=_default_controller_config,
     #if no_log_simple==False or log_qc:
     if no_log_simple==False:
         revised_disabled_channels, n_bad_channels = evaluate_pedestal(ped_fname, revised_disabled_channels, baseline_cut_value, no_apply_baseline_cut, noise_cut_value, no_apply_noise_cut)
-        revised_bad_channel_filename=save_simple_json(revised_disabled_channels, tile_id)
+        revised_bad_channel_filename=save_simple_json(revised_disabled_channels, tile_id,'second')
         print('\n\n\n===========\t',n_bad_channels,' bad channels\t ===========\n\n\n')
 
     print('Soft reset issued')
