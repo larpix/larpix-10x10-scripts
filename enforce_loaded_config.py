@@ -43,7 +43,9 @@ def set_pacman_power(c, vdda=46020, vddd=40605):
     c.io.set_reg(0x0002413e, vdda) # tile 8 VDDA
     c.io.set_reg(0x0002413f, vddd) # tile 8 VDDD
     c.io.set_reg(0x00000014, 1) # enable global larpix power
-    c.io.set_reg(0x00000010, 0b11111111) # enable tiles to be powered
+    c.io.set_reg(0x00000010, 0b1011111111) # enable tiles to be powered
+    c.io.set_reg(0x101C, 4) # set master clock to 10 MHz
+    c.io.set_reg(0x18, 0xffffffff) #enable uarts
     time.sleep(0.1)
 
 def main(config_name=_default_config_name, controller_config=_default_controller_config, disabled_channels=_default_disabled_channels, *args, **kwargs):
